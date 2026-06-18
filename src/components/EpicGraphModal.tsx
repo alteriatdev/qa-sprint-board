@@ -15,7 +15,7 @@ const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
   ssr: false,
 }) as unknown as React.ComponentType<Record<string, unknown>>;
 
-const LINK_HEX = "#c084fc"; // violet-400 — связанные (issue links)
+const LINK_HEX = "#f8fafc"; // white — связанные (issue links); фиолетовый занят статусом release
 
 interface GNode {
   id: string;
@@ -182,7 +182,7 @@ export function EpicGraphModal({
               }}
               linkColor={(link: unknown) =>
                 (link as { linked?: boolean }).linked
-                  ? "rgba(192,132,252,0.45)"
+                  ? "rgba(248,250,252,0.5)"
                   : "rgba(148,163,184,0.16)"
               }
               linkWidth={(link: unknown) => ((link as { linked?: boolean }).linked ? 1.2 : 0.7)}

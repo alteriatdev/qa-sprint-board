@@ -34,12 +34,14 @@ export interface EpicGraphData {
 export const epicGraph = data as Record<string, EpicGraphData>;
 
 // Цвета тонов (hex — для canvas force-graph).
+// Разнесены по разным секторам цветового круга, чтобы соседние по воркфлоу
+// статусы (в QA → release → готово) визуально НЕ сливались.
 export const TONE_HEX: Record<GraphTone, string> = {
-  danger: "#fb7185", // rose-400 — reopen / блок
-  warn: "#fbbf24", // amber-400 — новые / backlog
-  progress: "#38bdf8", // sky-400 — в QA
-  ready: "#2dd4bf", // teal-400 — release / merge
-  done: "#34d399", // emerald-400 — закрыто
+  danger: "#f43f5e", // rose-500 — reopen / блок (красный)
+  warn: "#f59e0b", // amber-500 — новые / backlog (янтарь)
+  progress: "#3b82f6", // blue-500 — в QA (синий)
+  ready: "#a855f7", // purple-500 — release / merge (фиолетовый)
+  done: "#22c55e", // green-500 — готово (зелёный)
   muted: "#94a3b8", // slate-400 — прочее
 };
 
