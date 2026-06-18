@@ -189,13 +189,6 @@ export function EpicGraphModal({
               linkLineDash={(link: unknown) =>
                 (link as { linked?: boolean }).linked ? [4, 3] : []
               }
-              linkDirectionalParticles={1}
-              linkDirectionalParticleSpeed={0.005}
-              linkDirectionalParticleWidth={1.4}
-              linkDirectionalParticleColor={(link: unknown) => {
-                const t = (link as { target?: GNode }).target;
-                return typeof t === "object" && t?.color ? t.color : "#38bdf8";
-              }}
               onNodeClick={(node: unknown) => {
                 const n = node as GNode;
                 window.open(n.href, "_blank", "noreferrer");
