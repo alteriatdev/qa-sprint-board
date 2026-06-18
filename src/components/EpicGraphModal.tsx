@@ -170,8 +170,9 @@ export function EpicGraphModal({
               height={size.h}
               graphData={graphData}
               backgroundColor="#0a0f1c"
-              cooldownTicks={120}
-              d3VelocityDecay={0.3}
+              warmupTicks={80}
+              cooldownTicks={60}
+              d3VelocityDecay={0.4}
               onEngineStop={() => fgRef.current?.zoomToFit(500, 48)}
               nodeLabel={(node: unknown) => {
                 const n = node as GNode;
@@ -203,14 +204,17 @@ export function EpicGraphModal({
               nodeCanvasObject={(node: unknown, ctx: CanvasRenderingContext2D, scale: number) => {
                 const n = node as GNode & { x: number; y: number };
                 const r = n.isEpic ? 7 : n.type === "bug" ? 3.6 : 2.8;
-                ctx.save();
-                ctx.shadowColor = n.color;
-                ctx.shadowBlur = n.isEpic ? 24 : 9;
+                // Дешёвое «гало» без shadowBlur (blur убивал FPS на 165 нодах).
+                ctx.globalAlpha = 0.22;
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, r * 2.1, 0, 2 * Math.PI);
+                ctx.fillStyle = n.color;
+                ctx.fill();
+                ctx.globalAlpha = 1;
                 ctx.beginPath();
                 ctx.arc(n.x, n.y, r, 0, 2 * Math.PI);
                 ctx.fillStyle = n.color;
                 ctx.fill();
-                ctx.restore();
                 if (n.linked) {
                   ctx.beginPath();
                   ctx.arc(n.x, n.y, r + 1.8, 0, 2 * Math.PI);
