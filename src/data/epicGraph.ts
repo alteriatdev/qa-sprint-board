@@ -9,7 +9,20 @@
 
 import data from "./epicGraph.json";
 
-export type GraphTone = "danger" | "warn" | "progress" | "ready" | "done" | "muted";
+// Тон узла = смысл статуса Jira. Разведены по жизненному циклу тикета, чтобы
+// близкие по воркфлоу статусы (R.F. QA vs QA testing, блок девов vs блок тестов,
+// release vs merge) НЕ сливались в один цвет.
+export type GraphTone =
+  | "backlog" // analysis / Backlog / New — не начато
+  | "dev" // In development — дев пишет код
+  | "merge" // Merge to stage — код готов к заливке на стейдж
+  | "blocked" // Blocked — блок девов
+  | "reopen" // Reopen — протестирован, ушёл на доработку
+  | "blockTest" // Блок тесты — блок именно тестирования
+  | "readyQa" // R.F. QA — готово к тестам
+  | "testing" // QA testing — в тестировании
+  | "release" // R.F Release / Готово к релизу — тесты на стейдже пройдены
+  | "done"; // Готово — жизненный цикл закончен
 
 export interface GraphNode {
   key: string;
@@ -33,26 +46,34 @@ export interface EpicGraphData {
 
 export const epicGraph = data as Record<string, EpicGraphData>;
 
-// Цвета тонов (hex — для canvas force-graph).
-// Разнесены по разным секторам цветового круга, чтобы соседние по воркфлоу
-// статусы (в QA → release → готово) визуально НЕ сливались.
+// Цвета тонов (hex — для canvas force-graph). Подобраны максимально контрастно
+// на тёмном фоне, по разным секторам цветового круга.
 export const TONE_HEX: Record<GraphTone, string> = {
-  danger: "#f43f5e", // rose-500 — reopen / блок (красный)
-  warn: "#f59e0b", // amber-500 — новые / backlog (янтарь)
-  progress: "#3b82f6", // blue-500 — в QA (синий)
-  ready: "#a855f7", // purple-500 — release / merge (фиолетовый)
+  backlog: "#64748b", // slate-500 — не начато (серый)
+  dev: "#facc15", // yellow-400 — в разработке (чистый жёлтый)
+  merge: "#84cc16", // lime-500 — merge to stage (жёлто-зелёный)
+  blocked: "#dc2626", // red-600 — блок девов (насыщенный красный)
+  reopen: "#ec4899", // pink-500 — доработка (розовый)
+  blockTest: "#f97316", // orange-500 — блок тестов (насыщенный оранж)
+  readyQa: "#22d3ee", // cyan-400 — готово к тестам (бирюза)
+  testing: "#3b82f6", // blue-500 — в тестировании (синий)
+  release: "#a855f7", // purple-500 — тесты на стейдже пройдены (фиолетовый)
   done: "#22c55e", // green-500 — готово (зелёный)
-  muted: "#94a3b8", // slate-400 — прочее
 };
 
-// Статус Jira → тон узла.
+// Статус Jira → тон узла. Порядок проверок важен: специфичные статусы раньше
+// общих, чтобы R.F. QA не утёк в «testing», а «Готово к релизу» — в «done».
 export function toneOfStatus(status: string, cat: string): GraphTone {
-  const s = status.toLowerCase();
-  if (cat === "done") return "done";
-  if (s.includes("reopen") || s.includes("block") || s.includes("блок")) return "danger";
-  if (s.includes("release") || s.includes("merge")) return "ready";
-  if (s.includes("qa")) return "progress";
-  if (cat === "new" || s.includes("backlog") || s.includes("to do") || s.includes("open"))
-    return "warn";
-  return "muted";
+  const s = status.toLowerCase().trim();
+
+  if (s.includes("reopen")) return "reopen"; // доработка
+  if (s.includes("merge")) return "merge"; // Merge to stage — код готов к заливке
+  if (s.includes("блок тест") || s.includes("block test")) return "blockTest"; // блок тестирования
+  if (s.includes("blocked")) return "blocked"; // блок девов
+  if (s.includes("release") || s.includes("релиз")) return "release"; // R.F Release / Готово к релизу
+  if (s.includes("testing")) return "testing"; // QA testing — в тестировании
+  if (s.includes("qa")) return "readyQa"; // R.F. QA — готово к тестам
+  if (s.includes("develop") || s.includes("разработ")) return "dev"; // In development
+  if (cat === "done" || s.includes("готов")) return "done"; // Готово
+  return "backlog"; // analysis / Backlog / New / прочее
 }

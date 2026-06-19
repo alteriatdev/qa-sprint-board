@@ -33,13 +33,18 @@ interface GNode {
 }
 
 // Порядок и подписи фильтруемых тонов (status-цветов) в легенде.
+// Порядок = жизненный цикл тикета слева направо.
 const TONE_LEGEND: { tone: GraphTone; label: string }[] = [
-  { tone: "danger", label: "Reopen / блок" },
-  { tone: "warn", label: "Новые / backlog" },
-  { tone: "progress", label: "В QA" },
-  { tone: "ready", label: "Release / merge" },
+  { tone: "backlog", label: "Бэклог / анализ" },
+  { tone: "dev", label: "В разработке" },
+  { tone: "merge", label: "Merge to stage" },
+  { tone: "blocked", label: "Блок (девы)" },
+  { tone: "reopen", label: "Reopen (доработка)" },
+  { tone: "blockTest", label: "Блок тестов" },
+  { tone: "readyQa", label: "Готово к тестам" },
+  { tone: "testing", label: "В тестировании" },
+  { tone: "release", label: "Тесты пройдены" },
   { tone: "done", label: "Готово" },
-  { tone: "muted", label: "Прочее" },
 ];
 
 export function EpicGraphModal({
@@ -131,12 +136,16 @@ export function EpicGraphModal({
   // Счётчик задач по тонам (дети + связанные).
   const toneCounts = useMemo(() => {
     const c: Record<GraphTone, number> = {
-      danger: 0,
-      warn: 0,
-      progress: 0,
-      ready: 0,
+      backlog: 0,
+      dev: 0,
+      merge: 0,
+      blocked: 0,
+      reopen: 0,
+      blockTest: 0,
+      readyQa: 0,
+      testing: 0,
+      release: 0,
       done: 0,
-      muted: 0,
     };
     for (const n of snapshot?.nodes ?? []) c[toneOfStatus(n.status, n.cat)]++;
     for (const n of snapshot?.linked ?? []) c[toneOfStatus(n.status, n.cat)]++;
