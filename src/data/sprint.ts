@@ -159,7 +159,7 @@ export const epics: Epic[] = [
     priority: "highest",
     team: "CORE",
     jiraStatus: "qa_testing",
-    progress: { firstPass: 97 },
+    progress: { firstPass: 100, retest: 0 },
     links: { jira: `${JIRA}/SD-2463`, testChannel: "https://sprutgamingtech.slack.com/archives/C0ATHE2F0KB" },
   },
   {
