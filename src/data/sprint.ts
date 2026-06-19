@@ -333,6 +333,7 @@ export const epics: Epic[] = [
     priority: "highest",
     team: "CORE",
     jiraStatus: "analysis",
+    progress: { firstPass: 100, retest: 50 },
     links: { jira: `${JIRA}/SPS-424` },
   },
   {
