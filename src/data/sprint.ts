@@ -107,7 +107,7 @@ export const epics: Epic[] = [
     priority: "highest",
     team: "CORE",
     jiraStatus: "qa_testing",
-    progress: { firstPass: 100, retest: 68 },
+    progress: { firstPass: 100, retest: 87 },
     links: { jira: `${JIRA}/SD-6457` },
   },
   {
@@ -157,7 +157,7 @@ export const epics: Epic[] = [
     priority: "highest",
     team: "CORE",
     jiraStatus: "qa_testing",
-    progress: { firstPass: 95 },
+    progress: { firstPass: 97 },
     links: { jira: `${JIRA}/SD-2463`, testChannel: "https://sprutgamingtech.slack.com/archives/C0ATHE2F0KB" },
   },
   {
@@ -168,7 +168,7 @@ export const epics: Epic[] = [
     priority: "highest",
     team: "CORE",
     jiraStatus: "qa_testing",
-    progress: { firstPass: 100, retest: 95 },
+    progress: { firstPass: 100, retest: 99 },
     links: { jira: `${JIRA}/SD-2462` },
   },
   {
@@ -200,7 +200,7 @@ export const epics: Epic[] = [
     priority: "highest",
     team: "CORE",
     jiraStatus: "qa_testing",
-    progress: { firstPass: 83 },
+    progress: { firstPass: 100 },
     links: { jira: `${JIRA}/SD-2521` },
   },
   {
@@ -221,7 +221,7 @@ export const epics: Epic[] = [
     priority: "highest",
     team: "CORE",
     jiraStatus: "qa_testing",
-    progress: { firstPass: 100, retest: 90 },
+    progress: { firstPass: 100, retest: 92 },
     links: { jira: `${JIRA}/BF-2804` },
   },
   {
@@ -231,7 +231,7 @@ export const epics: Epic[] = [
     priority: "highest",
     team: "CORE",
     jiraStatus: "qa_testing",
-    progress: { firstPass: 100, retest: 78 },
+    progress: { firstPass: 100, retest: 86 },
     links: { jira: `${JIRA}/BF-2145` },
   },
   {
@@ -241,7 +241,7 @@ export const epics: Epic[] = [
     priority: "highest",
     team: "CORE",
     jiraStatus: "qa_testing",
-    progress: { firstPass: 100 },
+    progress: { firstPass: 100, retest: 16 },
     links: { jira: `${JIRA}/BF-2809` },
   },
   {
@@ -251,7 +251,7 @@ export const epics: Epic[] = [
     priority: "highest",
     team: "CORE",
     jiraStatus: "qa_testing",
-    progress: { firstPass: 82 },
+    progress: { firstPass: 100 },
     links: { jira: `${JIRA}/BF-2970` },
   },
   {
@@ -270,7 +270,7 @@ export const epics: Epic[] = [
     priority: "highest",
     team: "CORE",
     jiraStatus: "qa_testing",
-    progress: { firstPass: 100, retest: 85 },
+    progress: { firstPass: 100, retest: 90 },
     links: { jira: `${JIRA}/SD-4767`, testChannel: "https://sprutgamingtech.slack.com/archives/C0A8SDSP0TD" },
   },
   {
@@ -290,8 +290,9 @@ export const epics: Epic[] = [
     goal: "Сделать смоки на демо.",
     priority: "highest",
     team: "CORE",
-    jiraStatus: "qa_testing",
-    progress: { firstPass: 100, retest: 99 },
+    goalDone: true,
+    jiraStatus: "done",
+    progress: { firstPass: 100, retest: 100 },
     links: { jira: `${JIRA}/SD-4081` },
   },
   // ===== Свободные (никому пока не назначены) =====
@@ -301,7 +302,7 @@ export const epics: Epic[] = [
     goal: "Смок-тестирование кубера на стейдже.",
     priority: "highest",
     team: "CORE",
-    jiraStatus: "qa_testing",
+    jiraStatus: "block_tests",
     links: { jira: `${JIRA}/SD-7002` },
   },
   {
@@ -348,7 +349,7 @@ export const epics: Epic[] = [
     priority: "high",
     team: "CORE",
     task: true,
-    jiraStatus: "rf_qa",
+    jiraStatus: "qa_testing",
     links: { jira: `${JIRA}/BF-3160` },
   },
   // ===== Критбизнес =====

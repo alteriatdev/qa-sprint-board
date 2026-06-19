@@ -7,11 +7,16 @@
 // Дочерние задачи (поле parent), можно несколько дампов на эпик (пагинация):
 //   node scripts/genGraph.mjs <EPIC> <children.json> [<EPIC2> <children2.json> ...]
 //
+// Дочерние задачи общим дампом parent in (...) — группируются по fields.parent.key
+// (дамп должен включать поле parent). Можно несколько страниц пагинации:
+//   node scripts/genGraph.mjs --children-grouped <kids.json> [<kids2.json> ...]
+//
 // Связанные задачи (issue links). Один дамп key in (...) с fields=["issuelinks"]
 // покрывает сразу все эпики — группируется по ключу issue:
 //   node scripts/genGraph.mjs --links <links.json> [<links2.json> ...]
 //
-// Режимы можно комбинировать: <пары детей...> --links <дампы линков...>
+// Режимы можно комбинировать: <пары детей...> --children-grouped ... --links ...
+// Флаг --reset очищает текущий снапшот перед записью (полная пересборка).
 
 import fs from "node:fs";
 import path from "node:path";
@@ -38,21 +43,38 @@ function nodeOf(key, fields) {
   };
 }
 
-const args = process.argv.slice(2);
-const splitAt = args.indexOf("--links");
-const childArgs = splitAt === -1 ? args : args.slice(0, splitAt);
-const linkArgs = splitAt === -1 ? [] : args.slice(splitAt + 1);
+let args = process.argv.slice(2);
+const reset = args.includes("--reset");
+args = args.filter((a) => a !== "--reset");
+
+// Разбор флаговых секций: всё до первого флага — пары <EPIC> <dump>.
+const groupedAt = args.indexOf("--children-grouped");
+const linksAt = args.indexOf("--links");
+const flagPts = [groupedAt, linksAt].filter((i) => i !== -1).sort((a, b) => a - b);
+const firstFlag = flagPts.length ? flagPts[0] : args.length;
+
+const childArgs = args.slice(0, firstFlag);
+const groupedArgs =
+  groupedAt === -1
+    ? []
+    : args.slice(groupedAt + 1, linksAt !== -1 && linksAt > groupedAt ? linksAt : args.length);
+const linkArgs =
+  linksAt === -1
+    ? []
+    : args.slice(linksAt + 1, groupedAt !== -1 && groupedAt > linksAt ? groupedAt : args.length);
 
 if (childArgs.length % 2 !== 0) {
   console.error("Дочерние дампы передаются парами <EPIC> <dump.json>.");
   process.exit(1);
 }
-if (childArgs.length === 0 && linkArgs.length === 0) {
-  console.error("Usage: node scripts/genGraph.mjs <EPIC> <children.json> ... [--links <links.json> ...]");
+if (childArgs.length === 0 && groupedArgs.length === 0 && linkArgs.length === 0) {
+  console.error(
+    "Usage: node scripts/genGraph.mjs [<EPIC> <children.json> ...] [--children-grouped <kids.json> ...] [--links <links.json> ...] [--reset]"
+  );
   process.exit(1);
 }
 
-const out = loadOut();
+const out = reset ? {} : loadOut();
 
 // --- Дочерние задачи (parent) ---
 for (let i = 0; i < childArgs.length; i += 2) {
@@ -68,6 +90,26 @@ for (let i = 0; i < childArgs.length; i += 2) {
   const bugs = nodes.filter((n) => n.type === "bug").length;
   const done = nodes.filter((n) => n.cat === "done").length;
   console.log(`${epic}: ${nodes.length} дочек (баги: ${bugs}, закрыто: ${done})`);
+}
+
+// --- Дочерние задачи общим дампом (группировка по fields.parent.key) ---
+for (const file of groupedArgs) {
+  const raw = JSON.parse(fs.readFileSync(file, "utf8"));
+  const perEpic = new Map();
+  for (const it of raw.issues ?? []) {
+    const epic = it.fields?.parent?.key;
+    if (!epic) continue;
+    if (!perEpic.has(epic)) perEpic.set(epic, []);
+    perEpic.get(epic).push(nodeOf(it.key, it.fields));
+  }
+  for (const [epic, nodes] of perEpic) {
+    const byKey = new Map((out[epic]?.nodes ?? []).map((n) => [n.key, n]));
+    for (const n of nodes) byKey.set(n.key, n);
+    out[epic] = { ...out[epic], nodes: [...byKey.values()] };
+    const bugs = nodes.filter((n) => n.type === "bug").length;
+    const done = nodes.filter((n) => n.cat === "done").length;
+    console.log(`${epic}: +${nodes.length} дочек (баги: ${bugs}, закрыто: ${done})`);
+  }
 }
 
 // --- Связанные задачи (issue links) ---
