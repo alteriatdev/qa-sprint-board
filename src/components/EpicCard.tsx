@@ -111,12 +111,15 @@ export function EpicCard({
 
       {!epic.task &&
         (() => {
+          // Две шкалы всегда. Если идут ретесты — первая проходка по чек-листу
+          // уже завершена, поэтому firstPass принимаем за 100%.
           const inRetest = epic.progress?.retest !== undefined;
+          const firstPass = inRetest ? 100 : epic.progress?.firstPass;
           return (
-            <ProgressBar
-              label={inRetest ? "Ретесты на stage" : "Тесты по чек-листу на stage"}
-              value={inRetest ? epic.progress?.retest : epic.progress?.firstPass}
-            />
+            <div className="flex flex-col gap-2">
+              <ProgressBar label="Тесты по чек-листу на stage" value={firstPass} />
+              <ProgressBar label="Ретесты на stage" value={epic.progress?.retest} />
+            </div>
           );
         })()}
 

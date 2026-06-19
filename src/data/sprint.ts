@@ -117,6 +117,7 @@ export const epics: Epic[] = [
     priority: "highest",
     team: "CORE",
     jiraStatus: "block_tests",
+    progress: { firstPass: 100, retest: 71.4 },
     links: { jira: `${JIRA}/SD-3881` },
   },
   {
@@ -136,6 +137,7 @@ export const epics: Epic[] = [
     priority: "highest",
     team: "CORE",
     jiraStatus: "qa_testing",
+    progress: { firstPass: 100, retest: 80 },
     links: { jira: `${JIRA}/SD-4988` },
   },
   {
@@ -178,8 +180,8 @@ export const epics: Epic[] = [
     goal: "Завершить разработку, протестировать на стейдже и просмокать на демо.",
     priority: "highest",
     team: "CORE",
-    jiraStatus: "in_development",
-    progress: { firstPass: 95 },
+    jiraStatus: "qa_testing",
+    progress: { firstPass: 100, retest: 95 },
     links: { jira: `${JIRA}/SD-6176` },
   },
   {
@@ -303,6 +305,7 @@ export const epics: Epic[] = [
     priority: "highest",
     team: "CORE",
     jiraStatus: "block_tests",
+    progress: { firstPass: 100 },
     links: { jira: `${JIRA}/SD-7002` },
   },
   {
