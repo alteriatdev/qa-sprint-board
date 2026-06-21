@@ -54,8 +54,8 @@ src/
         sync/route.ts          ← POST (ручной тригер, admin)
       cron/
         sync/route.ts          ← POST (Vercel Cron)
-    (admin)/
-      layout.tsx               ← проверка куки, редирект на /admin/login
+    admin/                     ← реальная папка (не route group), даёт URL /admin/*
+      layout.tsx               ← шапка-навигация админки
       page.tsx                 ← дашборд: спринт, кнопка «Синк Jira», last_synced_at
       login/page.tsx           ← форма ввода токена
       epics/page.tsx           ← таблица эпиков с inline firstPass % и флагами
@@ -453,24 +453,32 @@ const HEADERS = {
   "Content-Type": "application/json",
 };
 
-// Статусы Jira → наш enum
+// Статусы Jira → наш enum. Ключи в нижнем регистре — лукап регистронезависимый
+// (реальные имена в Jira приходят вперемешку: "analysis", "Merge to stage" и т.д.).
 const STATUS_MAP: Record<string, string> = {
-  "Analysis":          "analysis",
-  "Backlog":           "backlog",
-  "New":               "backlog",
-  "In development":    "in_development",
-  "Блок тесты":        "block_tests",
-  "Block tests":       "block_tests",
-  "R.F. QA":           "rf_qa",
-  "QA testing":        "qa_testing",
-  "R.F Release":       "rf_release",
-  "Готово к релизу":   "rf_release",
-  "Готово":            "done",
-  "Done":              "done",
+  "analysis":          "analysis",
+  "backlog":           "backlog",
+  "new":               "backlog",
+  "in development":    "in_development",
+  "merge to stage":    "in_development",
+  "блок тесты":        "block_tests",
+  "block tests":       "block_tests",
+  "blocked":           "block_tests",
+  "r.f. qa":           "rf_qa",
+  "qa testing":        "qa_testing",
+  "r.f release":       "rf_release",
+  "rf release":        "rf_release",
+  "готово к релизу":   "rf_release",
+  "готово":            "done",
+  "done":              "done",
 };
 
-// Статусы, считающиеся «готово» для retest %
-const DONE_STATUSES = new Set(["R.F Release", "Готово к релизу", "Готово", "Done", "RF Release"]);
+function mapStatus(name: string): string {
+  return STATUS_MAP[name.trim().toLowerCase()] ?? "backlog";
+}
+
+// Статусы, считающиеся «готово» для retest % (сверено по живым данным BF-2209).
+const DONE_STATUSES = new Set(["R.F Release", "RF Release", "Готово к релизу", "Готово", "Done"]);
 
 export interface JiraEpicMeta {
   key: string;
@@ -481,17 +489,29 @@ export interface JiraEpicMeta {
   priority: string;
 }
 
-async function jiraGet(path: string) {
-  const res = await fetch(`${BASE}${path}`, { headers: HEADERS });
-  if (!res.ok) throw new Error(`Jira ${path}: ${res.status} ${await res.text()}`);
-  return res.json();
-}
-
+// ВАЖНО: используем новый эндпоинт /rest/api/3/search/jql (старый /search
+// выпилен Atlassian) + обязательная пагинация через nextPageToken — иначе
+// эпики с >100 тикетов (напр. BF-2209 = 161 дочка) считаются неверно.
 async function searchIssues(jql: string, fields: string[]): Promise<unknown[]> {
-  const data = await jiraGet(
-    `/rest/api/3/search?jql=${encodeURIComponent(jql)}&fields=${fields.join(",")}&maxResults=100`
-  );
-  return (data as { issues: unknown[] }).issues ?? [];
+  const all: unknown[] = [];
+  let nextPageToken: string | undefined;
+
+  do {
+    const url = new URL(`${BASE}/rest/api/3/search/jql`);
+    url.searchParams.set("jql", jql);
+    url.searchParams.set("fields", fields.join(","));
+    url.searchParams.set("maxResults", "100");
+    if (nextPageToken) url.searchParams.set("nextPageToken", nextPageToken);
+
+    const res = await fetch(url, { headers: HEADERS });
+    if (!res.ok) throw new Error(`Jira ${jql}: ${res.status} ${await res.text()}`);
+    const data = await res.json() as { issues?: unknown[]; nextPageToken?: string };
+
+    all.push(...(data.issues ?? []));
+    nextPageToken = data.nextPageToken;
+  } while (nextPageToken);
+
+  return all;
 }
 
 // Получить мета по нескольким эпикам за один запрос
@@ -513,7 +533,7 @@ export async function fetchEpicsMeta(keys: string[]): Promise<JiraEpicMeta[]> {
   return issues.map((i) => ({
     key: i.key,
     title: i.fields.summary,
-    jiraStatus: STATUS_MAP[i.fields.status.name] ?? "backlog",
+    jiraStatus: mapStatus(i.fields.status.name),
     assigneeName: i.fields.assignee?.displayName ?? null,
     assigneeId: i.fields.assignee?.accountId ?? null,
     priority: i.fields.priority.name.toLowerCase(),
@@ -570,7 +590,7 @@ describe("jira client", () => {
 npm test -- src/lib/jira.test.ts
 ```
 
-Ожидаемый результат: 2 passed. В консоли — реальный retest % BF-2209 (должен быть ~93%).
+Ожидаемый результат: 2 passed. В консоли — реальный retest % BF-2209 (~91%, сверено по живым данным: 161 дочка + 10 связанных = 171, готово 155).
 
 - [ ] **Шаг 4: Коммит**
 
@@ -1248,8 +1268,8 @@ git commit -m "feat: admin CRUD API routes (эпики, спринты, учас
 
 **Files:**
 - Create: `src/middleware.ts`
-- Create: `src/app/(admin)/login/page.tsx`
-- Create: `src/app/(admin)/layout.tsx`
+- Create: `src/app/admin/login/page.tsx`
+- Create: `src/app/admin/layout.tsx`
 
 - [ ] **Шаг 1: Создать src/middleware.ts**
 
@@ -1277,10 +1297,10 @@ export const config = {
 };
 ```
 
-- [ ] **Шаг 2: Создать src/app/(admin)/login/page.tsx**
+- [ ] **Шаг 2: Создать src/app/admin/login/page.tsx**
 
 ```typescript
-// src/app/(admin)/login/page.tsx
+// src/app/admin/login/page.tsx
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -1353,10 +1373,10 @@ export async function POST(request: Request) {
 }
 ```
 
-- [ ] **Шаг 4: Создать src/app/(admin)/layout.tsx**
+- [ ] **Шаг 4: Создать src/app/admin/layout.tsx**
 
 ```typescript
-// src/app/(admin)/layout.tsx
+// src/app/admin/layout.tsx
 import type { ReactNode } from "react";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -1389,7 +1409,7 @@ curl -I http://localhost:3000/admin
 - [ ] **Шаг 6: Коммит**
 
 ```bash
-git add src/middleware.ts src/app/\(admin\)/ src/app/api/admin/
+git add src/middleware.ts src/app/admin/ src/app/api/admin/
 git commit -m "feat: admin middleware, страница логина, layout"
 ```
 
@@ -1398,13 +1418,13 @@ git commit -m "feat: admin middleware, страница логина, layout"
 ## Task 8: Мини-админка — страница эпиков /admin/epics
 
 **Files:**
-- Create: `src/app/(admin)/page.tsx`
-- Create: `src/app/(admin)/epics/page.tsx`
+- Create: `src/app/admin/page.tsx`
+- Create: `src/app/admin/epics/page.tsx`
 
-- [ ] **Шаг 1: Создать src/app/(admin)/page.tsx (дашборд)**
+- [ ] **Шаг 1: Создать src/app/admin/page.tsx (дашборд)**
 
 ```typescript
-// src/app/(admin)/page.tsx
+// src/app/admin/page.tsx
 "use client";
 import { useEffect, useState } from "react";
 
@@ -1463,10 +1483,10 @@ export default function AdminDashboard() {
 }
 ```
 
-- [ ] **Шаг 2: Создать src/app/(admin)/epics/page.tsx**
+- [ ] **Шаг 2: Создать src/app/admin/epics/page.tsx**
 
 ```typescript
-// src/app/(admin)/epics/page.tsx
+// src/app/admin/epics/page.tsx
 "use client";
 import { useEffect, useState, useCallback } from "react";
 
@@ -1586,7 +1606,7 @@ export default function AdminEpics() {
 - [ ] **Шаг 4: Коммит**
 
 ```bash
-git add src/app/\(admin\)/
+git add src/app/admin/
 git commit -m "feat: admin дашборд и страница редактирования эпиков"
 ```
 
@@ -1595,13 +1615,13 @@ git commit -m "feat: admin дашборд и страница редактиро
 ## Task 9: Admin — назначения и спринты
 
 **Files:**
-- Create: `src/app/(admin)/assignments/page.tsx`
-- Create: `src/app/(admin)/sprints/page.tsx`
+- Create: `src/app/admin/assignments/page.tsx`
+- Create: `src/app/admin/sprints/page.tsx`
 
-- [ ] **Шаг 1: Создать src/app/(admin)/assignments/page.tsx**
+- [ ] **Шаг 1: Создать src/app/admin/assignments/page.tsx**
 
 ```typescript
-// src/app/(admin)/assignments/page.tsx
+// src/app/admin/assignments/page.tsx
 "use client";
 import { useEffect, useState, useCallback } from "react";
 
@@ -1700,10 +1720,10 @@ export default function AdminAssignments() {
 }
 ```
 
-- [ ] **Шаг 2: Создать src/app/(admin)/sprints/page.tsx**
+- [ ] **Шаг 2: Создать src/app/admin/sprints/page.tsx**
 
 ```typescript
-// src/app/(admin)/sprints/page.tsx
+// src/app/admin/sprints/page.tsx
 "use client";
 import { useEffect, useState } from "react";
 
@@ -1814,7 +1834,7 @@ export default function AdminSprints() {
 - [ ] **Шаг 4: Коммит**
 
 ```bash
-git add src/app/\(admin\)/assignments src/app/\(admin\)/sprints
+git add src/app/admin/assignments src/app/admin/sprints
 git commit -m "feat: admin страницы назначений и спринтов"
 ```
 
@@ -1824,7 +1844,7 @@ git commit -m "feat: admin страницы назначений и спринт
 
 **Files:**
 - Create: `src/components/BoardDataProvider.tsx`
-- Modify: `src/app/(board)/page.tsx` → `src/app/page.tsx` (переключить источник данных)
+- Modify: `src/app/page.tsx` (доска остаётся на корне `/`, переключаем источник данных)
 
 **Interfaces:**
 - Consumes: `GET /api/sprint/active`
