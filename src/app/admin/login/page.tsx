@@ -1,11 +1,9 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function AdminLogin() {
   const [token, setToken] = useState("");
   const [error, setError] = useState("");
-  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -15,7 +13,9 @@ export default function AdminLogin() {
       body: JSON.stringify({ token }),
     });
     if (res.ok) {
-      router.push("/admin");
+      // Жёсткая навигация, а не router.push: иначе App Router отдаёт
+      // закэшированный RSC-редирект на /admin/login (кука ещё не учтена в кэше).
+      window.location.assign("/admin");
     } else {
       setError("Неверный токен");
     }
