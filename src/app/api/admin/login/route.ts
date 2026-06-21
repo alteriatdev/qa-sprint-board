@@ -1,9 +1,22 @@
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
-  const { token } = (await request.json()) as { token: string };
+  const expected = process.env.ADMIN_TOKEN;
+  if (!expected) {
+    return NextResponse.json(
+      { error: "ADMIN_TOKEN not configured" },
+      { status: 500 },
+    );
+  }
 
-  if (token !== process.env.ADMIN_TOKEN) {
+  let token: string | undefined;
+  try {
+    ({ token } = (await request.json()) as { token?: string });
+  } catch {
+    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  }
+
+  if (!token || token !== expected) {
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
