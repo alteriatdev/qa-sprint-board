@@ -38,13 +38,21 @@ export async function GET(_request?: Request) {
   }>;
 
   // Участники
-  const members = await sql`SELECT * FROM members ORDER BY team, name`;
+  const memberRows = (await sql`
+    SELECT id, name, slack_id, team, role, on_vacation, shift
+    FROM members ORDER BY team, name
+  `) as Array<{
+    id: string; name: string; slack_id: string | null; team: string;
+    role: string | null; on_vacation: boolean; shift: string | null;
+  }>;
 
   // Назначения
-  const assignments = await sql`
+  const assignmentRows = (await sql`
     SELECT id, sprint_id, member_id, jira_key, note
     FROM assignments WHERE sprint_id = ${s.id}
-  `;
+  `) as Array<{
+    id: number; sprint_id: number; member_id: string; jira_key: string; note: string | null;
+  }>;
 
   // Время последнего синка
   const syncRows = (await sql`
@@ -79,8 +87,22 @@ export async function GET(_request?: Request) {
       retestPct: e.retest_pct,
       firstPass: e.first_pass,
     })),
-    members,
-    assignments,
+    members: memberRows.map((m) => ({
+      id: m.id,
+      name: m.name,
+      slackId: m.slack_id,
+      team: m.team,
+      role: m.role,
+      onVacation: m.on_vacation,
+      shift: m.shift,
+    })),
+    assignments: assignmentRows.map((a) => ({
+      id: a.id,
+      sprintId: a.sprint_id,
+      memberId: a.member_id,
+      jiraKey: a.jira_key,
+      note: a.note,
+    })),
     syncedAt,
   });
 }
