@@ -39,7 +39,6 @@ export interface Epic {
   priority: Priority;
   team: Team; // чья это в первую очередь зона (CORE/eQA)
   critbusiness?: boolean;
-  bonus?: boolean; // эпик из группы «Бонусы» (общий срок ретестов на stage)
   goalDone?: boolean; // цель спринта по эпику выполнена (карточка станет зелёной)
   task?: boolean; // одиночная задача, а не эпик — без шкалы проходки/ретестов
   jiraStatus: JiraStatus; // мок live-статуса
@@ -141,9 +140,7 @@ export const epics: Epic[] = [
     links: { jira: `${JIRA}/SD-4988` },
   },
   {
-    key: "SD-2460",
-    bonus: true,
-    title: "Комплексное тестирование модуля Bonus Templates",
+    key: "SD-2460",    title: "Комплексное тестирование модуля Bonus Templates",
     goal: "Завершить разработку, протестировать на стейдже и просмокать на демо.",
     priority: "highest",
     team: "CORE",
@@ -152,9 +149,7 @@ export const epics: Epic[] = [
     links: { jira: `${JIRA}/SD-2460`, testChannel: "https://sprutgamingtech.slack.com/archives/C0ATHE2F0KB" },
   },
   {
-    key: "SD-2463",
-    bonus: true,
-    title: "Комплексное тестирование Personal Bonuses",
+    key: "SD-2463",    title: "Комплексное тестирование Personal Bonuses",
     goal: "Завершить разработку, протестировать на стейдже и просмокать на демо.",
     priority: "highest",
     team: "CORE",
@@ -163,9 +158,7 @@ export const epics: Epic[] = [
     links: { jira: `${JIRA}/SD-2463`, testChannel: "https://sprutgamingtech.slack.com/archives/C0ATHE2F0KB" },
   },
   {
-    key: "SD-2462",
-    bonus: true,
-    title: "Комплексное тестирование Cashback Bonus",
+    key: "SD-2462",    title: "Комплексное тестирование Cashback Bonus",
     goal: "Завершить разработку, протестировать на стейдже и просмокать на демо.",
     priority: "highest",
     team: "CORE",
@@ -174,9 +167,7 @@ export const epics: Epic[] = [
     links: { jira: `${JIRA}/SD-2462` },
   },
   {
-    key: "SD-6176",
-    bonus: true,
-    title: "Комплексное тестирование Sportsbook cashback template",
+    key: "SD-6176",    title: "Комплексное тестирование Sportsbook cashback template",
     goal: "Завершить разработку, протестировать на стейдже и просмокать на демо.",
     priority: "highest",
     team: "CORE",
@@ -195,9 +186,7 @@ export const epics: Epic[] = [
     links: { jira: `${JIRA}/SD-5870` },
   },
   {
-    key: "SD-2521",
-    bonus: true,
-    title: "Комплексное тестирование модуля Sportsbook Personal Bonus",
+    key: "SD-2521",    title: "Комплексное тестирование модуля Sportsbook Personal Bonus",
     goal: "Ознакомление, формирование чек-листа, первая проходка.",
     priority: "highest",
     team: "CORE",
@@ -206,9 +195,7 @@ export const epics: Epic[] = [
     links: { jira: `${JIRA}/SD-2521` },
   },
   {
-    key: "SD-2520",
-    bonus: true,
-    title: "Комплексное тестирование модуля Sportsbook Bonus Template",
+    key: "SD-2520",    title: "Комплексное тестирование модуля Sportsbook Bonus Template",
     goal: "Ознакомление, формирование чек-листа, первая проходка.",
     priority: "highest",
     team: "CORE",

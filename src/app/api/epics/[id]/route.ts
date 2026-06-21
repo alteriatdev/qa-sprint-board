@@ -13,7 +13,7 @@ export async function PUT(request: Request, { params }: Params) {
 
   const { id } = await params;
   const body = await parseBody<{
-    goal?: string; priority?: string; critbusiness?: boolean; bonus?: boolean;
+    goal?: string; priority?: string; critbusiness?: boolean;
     task?: boolean; goalDone?: boolean; firstPass?: number; updatedBy?: string;
   }>(request);
   if (!body) return badRequest("Невалидный JSON в теле запроса");
@@ -32,7 +32,6 @@ export async function PUT(request: Request, { params }: Params) {
         goal         = COALESCE(${body.goal ?? null}, goal),
         priority     = COALESCE(${body.priority ?? null}, priority),
         critbusiness = COALESCE(${body.critbusiness ?? null}, critbusiness),
-        bonus        = COALESCE(${body.bonus ?? null}, bonus),
         task         = COALESCE(${body.task ?? null}, task),
         goal_done    = COALESCE(${body.goalDone ?? null}, goal_done)
       WHERE id = ${id}

@@ -10,8 +10,7 @@ export async function POST(request: Request) {
 
   const body = await parseBody<{
     sprintId: number; jiraKey: string; team: string;
-    priority?: string; goal?: string; critbusiness?: boolean;
-    bonus?: boolean; task?: boolean;
+    priority?: string; goal?: string; critbusiness?: boolean; task?: boolean;
   }>(request);
   if (!body) return badRequest("Невалидный JSON в теле запроса");
 
@@ -21,11 +20,11 @@ export async function POST(request: Request) {
 
   try {
     const [row] = (await sql`
-      INSERT INTO sprint_epics (sprint_id, jira_key, team, priority, goal, critbusiness, bonus, task)
+      INSERT INTO sprint_epics (sprint_id, jira_key, team, priority, goal, critbusiness, task)
       VALUES (
         ${body.sprintId}, ${body.jiraKey}, ${body.team},
         ${body.priority ?? 'none'}, ${body.goal ?? null},
-        ${body.critbusiness ?? false}, ${body.bonus ?? false}, ${body.task ?? false}
+        ${body.critbusiness ?? false}, ${body.task ?? false}
       )
       RETURNING id
     `) as Array<{ id: number }>;

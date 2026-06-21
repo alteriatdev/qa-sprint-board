@@ -49,10 +49,10 @@ async function seed() {
     const e = epics[i];
     await sql`
       INSERT INTO sprint_epics
-        (sprint_id, jira_key, team, priority, goal, critbusiness, bonus, task, goal_done, sort_order)
+        (sprint_id, jira_key, team, priority, goal, critbusiness, task, goal_done, sort_order)
       VALUES
         (${sprintId}, ${e.key}, ${e.team}, ${e.priority},
-         ${e.goal ?? null}, ${e.critbusiness ?? false}, ${e.bonus ?? false},
+         ${e.goal ?? null}, ${e.critbusiness ?? false},
          ${e.task ?? false}, ${e.goalDone ?? false}, ${i})
       ON CONFLICT (sprint_id, jira_key) DO NOTHING
     `;

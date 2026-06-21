@@ -36,7 +36,6 @@ function apiEpicToEpic(e: Record<string, unknown>): Epic {
       retest: (e.retestPct as number) ?? undefined,
     },
     critbusiness: (e.critbusiness as boolean) ?? false,
-    bonus: (e.bonus as boolean) ?? false,
     task: (e.task as boolean) ?? false,
     goalDone: (e.goalDone as boolean) ?? false,
     links: { jira: `https://sprutgaming.atlassian.net/browse/${e.jiraKey}` },

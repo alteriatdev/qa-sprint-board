@@ -21,7 +21,7 @@ export async function GET(_request?: Request) {
   const epics = (await sql`
     SELECT
       se.id, se.sprint_id, se.jira_key, se.team, se.priority,
-      se.goal, se.critbusiness, se.bonus, se.task, se.goal_done, se.sort_order,
+      se.goal, se.critbusiness, se.task, se.goal_done, se.sort_order,
       jc.title, jc.jira_status, jc.assignee_name, jc.issue_type,
       COALESCE(jc.retest_pct, 0) AS retest_pct,
       COALESCE(pe.first_pass, 0) AS first_pass
@@ -32,7 +32,7 @@ export async function GET(_request?: Request) {
     ORDER BY se.sort_order ASC
   `) as Array<{
     id: number; sprint_id: number; jira_key: string; team: string; priority: string;
-    goal: string | null; critbusiness: boolean; bonus: boolean; task: boolean;
+    goal: string | null; critbusiness: boolean; task: boolean;
     goal_done: boolean; sort_order: number;
     title: string | null; jira_status: string | null; assignee_name: string | null;
     issue_type: string | null;
@@ -79,7 +79,6 @@ export async function GET(_request?: Request) {
       priority: e.priority,
       goal: e.goal,
       critbusiness: e.critbusiness,
-      bonus: e.bonus,
       // Тип ведёт Jira: эпик → шкалы, любой другой тип → задача без шкал.
       // Ручной флаг se.task — запасной, пока issue_type не синкнут.
       task: e.issue_type != null ? !isEpicType(e.issue_type) : e.task,

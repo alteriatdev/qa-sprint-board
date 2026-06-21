@@ -1,15 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarClock, Target } from "lucide-react";
+import { Target } from "lucide-react";
 import type { Epic, Member } from "@/data/sprint";
 import { progressColor } from "@/lib/format";
 import { Avatar } from "./Avatar";
 import { PriorityBadge, StatusBadge } from "./Badges";
 import { EpicGraphModal } from "./EpicGraphModal";
-
-// Общий срок завершения ретестов на stage для эпиков группы «Бонусы».
-const BONUS_RETEST_ETA = "19.06.2026";
 
 function ProgressBar({ label, value }: { label: string; value?: number }) {
   const pct = Math.min(Math.max(value ?? 0, 0), 100);
@@ -69,9 +66,7 @@ export function EpicCard({
           ? "border-emerald-500/40 bg-emerald-500/10"
           : epic.critbusiness
             ? "border-red-500/40 bg-red-500/6"
-            : epic.bonus
-              ? "border-violet-500/40 bg-violet-500/6"
-              : "border-white/10 bg-white/3"
+            : "border-white/10 bg-white/3"
       }`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -88,11 +83,6 @@ export function EpicCard({
           {epic.critbusiness && (
             <span className="rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-300 ring-1 ring-inset ring-red-500/40">
               Критбизнес
-            </span>
-          )}
-          {epic.bonus && (
-            <span className="rounded bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-300 ring-1 ring-inset ring-violet-500/40">
-              Бонусы
             </span>
           )}
         </div>
@@ -122,13 +112,6 @@ export function EpicCard({
             </div>
           );
         })()}
-
-      {epic.bonus && (
-        <div className="flex items-center gap-1.5 rounded-lg bg-violet-500/10 px-2.5 py-1.5 text-[11px] font-medium text-violet-200 ring-1 ring-inset ring-violet-500/30">
-          <CalendarClock className="h-3.5 w-3.5 shrink-0" />
-          Завершение ретестов на stage ожидается {BONUS_RETEST_ETA}
-        </div>
-      )}
 
       <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-1">
         <PriorityBadge priority={epic.priority} />
