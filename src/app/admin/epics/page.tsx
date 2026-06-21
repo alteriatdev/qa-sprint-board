@@ -51,7 +51,6 @@ export default function AdminEpics() {
               <th className="py-2 pr-4 text-center">Ретесты %</th>
               <th className="py-2 pr-4 text-center">Критбизнес</th>
               <th className="py-2 pr-4 text-center">Бонус</th>
-              <th className="py-2 pr-4 text-center">Задача</th>
               <th className="py-2 pr-4 text-center">Цель ✓</th>
             </tr>
           </thead>
@@ -87,7 +86,7 @@ export default function AdminEpics() {
                   />
                 </td>
                 <td className="py-2 pr-4 text-center text-gray-400">{epic.retestPct}%</td>
-                {(["critbusiness", "bonus", "task", "goalDone"] as const).map((flag) => (
+                {(["critbusiness", "bonus", "goalDone"] as const).map((flag) => (
                   <td key={flag} className="py-2 pr-4 text-center">
                     <input
                       type="checkbox"
