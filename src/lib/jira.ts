@@ -45,6 +45,14 @@ export interface JiraEpicMeta {
   assigneeName: string | null;
   assigneeId: string | null;
   priority: string;
+  issueType: string;
+}
+
+// Тип задачи в Jara локализован: "Эпик" / "Задача". Эпиком считаем только
+// собственно эпик (рус/англ); всё остальное (Задача/Task/Story/Bug/Подзадача)
+// на доске рисуется как одиночная задача без шкал прогресса.
+export function isEpicType(name: string | null | undefined): boolean {
+  return ["эпик", "epic"].includes((name ?? "").trim().toLowerCase());
 }
 
 // ВАЖНО: используем новый эндпоинт /rest/api/3/search/jql (старый /search
@@ -77,7 +85,7 @@ export async function fetchEpicsMeta(keys: string[]): Promise<JiraEpicMeta[]> {
   if (keys.length === 0) return [];
   const issues = await searchIssues(
     `key in (${keys.join(",")})`,
-    ["summary", "status", "assignee", "priority"]
+    ["summary", "status", "assignee", "priority", "issuetype"]
   ) as Array<{
     key: string;
     fields: {
@@ -85,6 +93,7 @@ export async function fetchEpicsMeta(keys: string[]): Promise<JiraEpicMeta[]> {
       status: { name: string };
       assignee: { displayName: string; accountId: string } | null;
       priority: { name: string } | null;
+      issuetype: { name: string } | null;
     };
   }>;
 
@@ -96,6 +105,7 @@ export async function fetchEpicsMeta(keys: string[]): Promise<JiraEpicMeta[]> {
     assigneeId: i.fields.assignee?.accountId ?? null,
     // priority бывает null у части тикетов — безопасный доступ + дефолт.
     priority: i.fields.priority?.name?.toLowerCase() ?? "none",
+    issueType: i.fields.issuetype?.name ?? "",
   }));
 }
 

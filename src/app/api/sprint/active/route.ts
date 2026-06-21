@@ -1,6 +1,7 @@
 // src/app/api/sprint/active/route.ts
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
+import { isEpicType } from "@/lib/jira";
 
 export async function GET(_request?: Request) {
   // Активный спринт
@@ -21,7 +22,7 @@ export async function GET(_request?: Request) {
     SELECT
       se.id, se.sprint_id, se.jira_key, se.team, se.priority,
       se.goal, se.critbusiness, se.bonus, se.task, se.goal_done, se.sort_order,
-      jc.title, jc.jira_status, jc.assignee_name,
+      jc.title, jc.jira_status, jc.assignee_name, jc.issue_type,
       COALESCE(jc.retest_pct, 0) AS retest_pct,
       COALESCE(pe.first_pass, 0) AS first_pass
     FROM sprint_epics se
@@ -34,6 +35,7 @@ export async function GET(_request?: Request) {
     goal: string | null; critbusiness: boolean; bonus: boolean; task: boolean;
     goal_done: boolean; sort_order: number;
     title: string | null; jira_status: string | null; assignee_name: string | null;
+    issue_type: string | null;
     retest_pct: number; first_pass: number;
   }>;
 
@@ -78,7 +80,9 @@ export async function GET(_request?: Request) {
       goal: e.goal,
       critbusiness: e.critbusiness,
       bonus: e.bonus,
-      task: e.task,
+      // Тип ведёт Jira: эпик → шкалы, любой другой тип → задача без шкал.
+      // Ручной флаг se.task — запасной, пока issue_type не синкнут.
+      task: e.issue_type != null ? !isEpicType(e.issue_type) : e.task,
       goalDone: e.goal_done,
       sortOrder: e.sort_order,
       title: e.title,

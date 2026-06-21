@@ -51,11 +51,11 @@ export async function syncActiveSprintEpics(): Promise<{ synced: number; errors:
 
     try {
       await sql`
-        INSERT INTO jira_cache (jira_key, title, jira_status, assignee_name, assignee_id, priority, retest_pct, synced_at)
+        INSERT INTO jira_cache (jira_key, title, jira_status, assignee_name, assignee_id, priority, retest_pct, issue_type, synced_at)
         VALUES (
           ${key}, ${meta.title}, ${meta.jiraStatus},
           ${meta.assigneeName}, ${meta.assigneeId}, ${meta.priority},
-          ${retestMap.get(key) ?? 0}, now()
+          ${retestMap.get(key) ?? 0}, ${meta.issueType}, now()
         )
         ON CONFLICT (jira_key) DO UPDATE SET
           title         = EXCLUDED.title,
@@ -64,6 +64,7 @@ export async function syncActiveSprintEpics(): Promise<{ synced: number; errors:
           assignee_id   = EXCLUDED.assignee_id,
           priority      = EXCLUDED.priority,
           retest_pct    = EXCLUDED.retest_pct,
+          issue_type    = EXCLUDED.issue_type,
           synced_at     = now()
       `;
       synced++;
