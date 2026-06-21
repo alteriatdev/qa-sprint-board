@@ -45,6 +45,7 @@ export default function AdminEpics() {
             <tr className="text-gray-400 border-b border-gray-800 text-left">
               <th className="py-2 pr-4">Ключ</th>
               <th className="py-2 pr-4">Название</th>
+              <th className="py-2 pr-4">Цель спринта</th>
               <th className="py-2 pr-4">Команда</th>
               <th className="py-2 pr-4">Статус Jira</th>
               <th className="py-2 pr-4 text-center">Чек-лист %</th>
@@ -68,6 +69,18 @@ export default function AdminEpics() {
                 </td>
                 <td className="py-2 pr-4 max-w-xs truncate text-gray-200">
                   {epic.title ?? <span className="text-gray-600 italic">не синкнуто</span>}
+                </td>
+                <td className="py-2 pr-4">
+                  <input
+                    type="text"
+                    defaultValue={epic.goal ?? ""}
+                    placeholder="—"
+                    onBlur={(e) => {
+                      const val = e.target.value.trim();
+                      if (val !== (epic.goal ?? "")) updateEpic(epic.id, { goal: val });
+                    }}
+                    className="w-64 bg-gray-800 text-white rounded px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-gray-600"
+                  />
                 </td>
                 <td className="py-2 pr-4 text-gray-400">{epic.team}</td>
                 <td className="py-2 pr-4 text-gray-400">{epic.jiraStatus ?? "—"}</td>
