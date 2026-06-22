@@ -248,9 +248,13 @@ function HomeInner() {
           {!viewer.onVacation && myEpics.length === 0 && (
             <Empty>Пока ничего не назначено</Empty>
           )}
-          {myEpics.map((e) => (
-            <EpicCard key={e.key} epic={e} note={myAsg?.note} />
-          ))}
+          {myEpics.length > 0 && (
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+              {myEpics.map((e) => (
+                <EpicCard key={e.key} epic={e} note={myAsg?.note} />
+              ))}
+            </div>
+          )}
         </Zone>
       ) : freeView ? (
         /* ===== Свободный пул «Можно взять» ===== */
