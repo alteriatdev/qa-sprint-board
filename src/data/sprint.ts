@@ -30,6 +30,7 @@ export interface Member {
   role?: string; // Lead, Trainee и т.п.
   onVacation?: boolean;
   shift?: string; // часы смены (для eQA)
+  jiraAccountId?: string; // accountId в Jira — для резолва поля «QA» в назначения
 }
 
 export interface Epic {
@@ -79,18 +80,18 @@ export const sprint: Sprint = {
 
 export const members: Member[] = [
   // --- CORE TEAM ---
-  { id: "denisk", name: "Denis K", slackId: "U0A0JB7CF0D", team: "CORE", role: "Lead QA" },
+  { id: "denisk", name: "Denis K", slackId: "U0A0JB7CF0D", team: "CORE", role: "Lead QA", jiraAccountId: "712020:ee5687c2-6ce1-441c-8427-8d0fcce3ae2d" },
   { id: "anton", name: "Anton K", slackId: "U0A3BD367H7", team: "CORE", onVacation: true },
-  { id: "yaroslav", name: "Yaroslav S", slackId: "U0A0FCLNR35", team: "CORE" },
-  { id: "aleksey", name: "Aleksey Ch", slackId: "U0A0KNTM8ES", team: "CORE" },
-  { id: "denisv", name: "Denis V", slackId: "U0AHRFQJX51", team: "CORE", role: "Зам" },
-  { id: "veronika", name: "Veronika S", slackId: "U0AH12E8ANN", team: "CORE" },
-  { id: "daria", name: "Daria A", slackId: "U0A50DNBD1R", team: "CORE" },
-  { id: "julia", name: "Julia T", slackId: "U0B1X5JUQP8", team: "CORE", role: "Trainee" },
-  { id: "natalia", name: "Natalia", slackId: "U0B7PUX9KHP", team: "CORE" },
-  { id: "vasiliy", name: "Vasiliy K", slackId: "U0B9BAMGY2C", team: "CORE" },
+  { id: "yaroslav", name: "Yaroslav S", slackId: "U0A0FCLNR35", team: "CORE", jiraAccountId: "712020:2c182a5c-52d9-42ed-9b87-6db5b63a571d" },
+  { id: "aleksey", name: "Aleksey Ch", slackId: "U0A0KNTM8ES", team: "CORE", jiraAccountId: "712020:6f0d7900-f940-4190-8460-80e739cf3524" },
+  { id: "denisv", name: "Denis V", slackId: "U0AHRFQJX51", team: "CORE", role: "Зам", jiraAccountId: "712020:035ea27b-74ca-475c-ae6d-d0aa2b3d959d" },
+  { id: "veronika", name: "Veronika S", slackId: "U0AH12E8ANN", team: "CORE", jiraAccountId: "712020:0f009a3a-57de-4d7f-9380-83d2f7e20e98" },
+  { id: "daria", name: "Daria A", slackId: "U0A50DNBD1R", team: "CORE", jiraAccountId: "712020:826cca20-fb51-49d5-ba05-1fd1c055c2c1" },
+  { id: "julia", name: "Julia T", slackId: "U0B1X5JUQP8", team: "CORE", role: "Trainee", jiraAccountId: "712020:bc0b6bf2-a3ee-4496-9d58-a23538bc975b" },
+  { id: "natalia", name: "Natalia", slackId: "U0B7PUX9KHP", team: "CORE", jiraAccountId: "712020:67cfc971-97e9-41f6-ab15-40e3bf30a8be" },
+  { id: "vasiliy", name: "Vasiliy K", slackId: "U0B9BAMGY2C", team: "CORE", jiraAccountId: "712020:32678de6-addb-473e-b98f-a699726cb523" },
   // --- eQA TEAM ---
-  { id: "edvard", name: "Edvard K", slackId: "U0AP1L6RJKV", team: "eQA", shift: "19:00–01:00" },
+  { id: "edvard", name: "Edvard K", slackId: "U0AP1L6RJKV", team: "eQA", shift: "19:00–01:00", jiraAccountId: "70121:26af151c-c55a-46af-8118-242eb32788fc" },
   { id: "alexander", name: "Alexander P", slackId: "U0B23TV8BBM", team: "eQA", onVacation: true },
   { id: "mariia", name: "Mariia M", slackId: "U0AQ5QB13AL", team: "eQA", shift: "18:00–23:00" },
   { id: "egor", name: "Egor", slackId: "U0APBKGJBT6", team: "eQA", shift: "20:00–00:00" },

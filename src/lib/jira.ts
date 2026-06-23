@@ -48,6 +48,26 @@ export interface JiraEpicMeta {
   assigneeId: string | null;
   priority: string;
   issueType: string;
+  // accountId'ы из поля «QA» (тестеры, на кого назначен эпик). Поле кастомное и
+  // РАЗНОЕ по проектам: SD → customfield_10721, BF → customfield_10722,
+  // SPS → customfield_11193. Берём объединение всех трёх (мульти-юзер пикер).
+  qaAccountIds: string[];
+}
+
+// Поля «QA» по проектам. Все три — мульти-юзер пикеры с одинаковым смыслом.
+const QA_FIELDS = ["customfield_10721", "customfield_10722", "customfield_11193"] as const;
+
+function extractQaAccountIds(fields: Record<string, unknown>): string[] {
+  const ids = new Set<string>();
+  for (const f of QA_FIELDS) {
+    const v = fields[f];
+    if (!Array.isArray(v)) continue;
+    for (const u of v) {
+      const acc = (u as { accountId?: unknown })?.accountId;
+      if (typeof acc === "string") ids.add(acc);
+    }
+  }
+  return [...ids];
 }
 
 // Тип задачи в Jara локализован: "Эпик" / "Задача". Эпиком считаем только
@@ -87,7 +107,7 @@ export async function fetchEpicsMeta(keys: string[]): Promise<JiraEpicMeta[]> {
   if (keys.length === 0) return [];
   const issues = await searchIssues(
     `key in (${keys.join(",")})`,
-    ["summary", "status", "assignee", "priority", "issuetype"]
+    ["summary", "status", "assignee", "priority", "issuetype", ...QA_FIELDS]
   ) as Array<{
     key: string;
     fields: {
@@ -96,7 +116,7 @@ export async function fetchEpicsMeta(keys: string[]): Promise<JiraEpicMeta[]> {
       assignee: { displayName: string; accountId: string } | null;
       priority: { name: string } | null;
       issuetype: { name: string } | null;
-    };
+    } & Record<string, unknown>;
   }>;
 
   return issues.map((i) => ({
@@ -108,6 +128,7 @@ export async function fetchEpicsMeta(keys: string[]): Promise<JiraEpicMeta[]> {
     // priority бывает null у части тикетов — безопасный доступ + дефолт.
     priority: i.fields.priority?.name?.toLowerCase() ?? "none",
     issueType: i.fields.issuetype?.name ?? "",
+    qaAccountIds: extractQaAccountIds(i.fields),
   }));
 }
 

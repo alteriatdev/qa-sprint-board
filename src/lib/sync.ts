@@ -3,12 +3,16 @@ import { sql } from "./db";
 import { fetchEpicsMeta, fetchRetestPct, fetchEpicGraph, type EpicGraphSnapshot } from "./jira";
 
 export async function syncActiveSprintEpics(): Promise<{ synced: number; errors: string[] }> {
-  // Достаём ключи активного спринта
+  // Активный спринт
+  const sprintRows = await sql`
+    SELECT id FROM sprints WHERE is_active = true LIMIT 1
+  ` as Array<{ id: number }>;
+  if (sprintRows.length === 0) return { synced: 0, errors: [] };
+  const sprintId = sprintRows[0].id;
+
+  // Ключи активного спринта
   const rows = await sql`
-    SELECT se.jira_key
-    FROM sprint_epics se
-    JOIN sprints s ON s.id = se.sprint_id
-    WHERE s.is_active = true
+    SELECT jira_key FROM sprint_epics WHERE sprint_id = ${sprintId}
   ` as Array<{ jira_key: string }>;
 
   const keys = rows.map((r) => r.jira_key);
@@ -95,5 +99,66 @@ export async function syncActiveSprintEpics(): Promise<{ synced: number; errors:
     }
   }
 
+  // Назначения из поля «QA» в Jira — источник правды. Резолвим accountId → member
+  // и полностью перезаписываем назначения активного спринта.
+  await syncAssignments(sprintId, keys, metaMap, errors);
+
   return { synced, errors };
+}
+
+// Перезапись назначений активного спринта из поля «QA» эпиков.
+// Матчим по members.jira_account_id (имена в Jira не совпадают с бордой).
+// Заметки (note) сохраняем для пар (member, epic), которые остаются.
+async function syncAssignments(
+  sprintId: number,
+  keys: string[],
+  metaMap: Map<string, Awaited<ReturnType<typeof fetchEpicsMeta>>[number]>,
+  errors: string[],
+): Promise<void> {
+  const memberRows = await sql`
+    SELECT id, jira_account_id FROM members WHERE jira_account_id IS NOT NULL
+  ` as Array<{ id: string; jira_account_id: string }>;
+
+  // Защита: если ни у кого нет accountId (миграция/бэкфилл не прокатились),
+  // НЕ трогаем назначения — иначе обнулим борду.
+  if (memberRows.length === 0) {
+    errors.push("skip assignments sync: no members have jira_account_id");
+    return;
+  }
+  const memberByAccount = new Map(memberRows.map((m) => [m.jira_account_id, m.id]));
+
+  // Сохраняем существующие заметки по паре (member, epic).
+  const existing = await sql`
+    SELECT member_id, jira_key, note FROM assignments WHERE sprint_id = ${sprintId}
+  ` as Array<{ member_id: string; jira_key: string; note: string | null }>;
+  const noteByPair = new Map(existing.map((a) => [`${a.member_id}::${a.jira_key}`, a.note]));
+
+  // Желаемый набор назначений из поля QA.
+  const desired: Array<{ memberId: string; jiraKey: string; note: string | null }> = [];
+  for (const key of keys) {
+    const meta = metaMap.get(key);
+    if (!meta) continue;
+    for (const acc of meta.qaAccountIds) {
+      const memberId = memberByAccount.get(acc);
+      if (!memberId) {
+        errors.push(`QA user ${acc} on ${key} not mapped to a member`);
+        continue;
+      }
+      desired.push({ memberId, jiraKey: key, note: noteByPair.get(`${memberId}::${key}`) ?? null });
+    }
+  }
+
+  // Полная замена в одной транзакции.
+  try {
+    await sql.transaction([
+      sql`DELETE FROM assignments WHERE sprint_id = ${sprintId}`,
+      ...desired.map((d) => sql`
+        INSERT INTO assignments (sprint_id, member_id, jira_key, note)
+        VALUES (${sprintId}, ${d.memberId}, ${d.jiraKey}, ${d.note})
+        ON CONFLICT (sprint_id, member_id, jira_key) DO UPDATE SET note = EXCLUDED.note
+      `),
+    ]);
+  } catch (e) {
+    errors.push(`assignments rewrite failed: ${String(e)}`);
+  }
 }
