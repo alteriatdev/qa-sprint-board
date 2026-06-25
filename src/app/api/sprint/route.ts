@@ -4,6 +4,16 @@ import { sql } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { parseBody, badRequest, serverError, isNonEmptyString } from "@/lib/http";
 
+// GET /api/sprint — список всех спринтов (от новых к старым)
+export async function GET() {
+  const rows = await sql`
+    SELECT id, number, start_date::text AS start, end_date::text AS end,
+           confluence_url AS "confluenceUrl", is_active AS "isActive"
+    FROM sprints ORDER BY id DESC
+  `;
+  return NextResponse.json(rows);
+}
+
 export async function POST(request: Request) {
   const authError = await requireAdmin(request);
   if (authError) return authError;
@@ -18,13 +28,10 @@ export async function POST(request: Request) {
   if (!isNonEmptyString(body.end)) return badRequest("end обязателен (дата)");
 
   try {
-    // Деактивация прошлого + вставка нового — одним statement (атомарно)
+    // Создаём неактивным — активацию делают явно через POST /api/sprint/:id/activate
     const [row] = (await sql`
-      WITH deactivated AS (
-        UPDATE sprints SET is_active = false WHERE is_active = true RETURNING id
-      )
       INSERT INTO sprints (number, start_date, end_date, confluence_url, is_active)
-      VALUES (${body.number}, ${body.start}, ${body.end}, ${body.confluenceUrl ?? null}, true)
+      VALUES (${body.number}, ${body.start}, ${body.end}, ${body.confluenceUrl ?? null}, false)
       RETURNING id
     `) as Array<{ id: number }>;
 

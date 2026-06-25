@@ -109,6 +109,8 @@ export async function syncActiveSprintEpics(): Promise<{ synced: number; errors:
 // Перезапись назначений активного спринта из поля «QA» эпиков.
 // Матчим по members.jira_account_id (имена в Jira не совпадают с бордой).
 // Заметки (note) сохраняем для пар (member, epic), которые остаются.
+// ВАЖНО: обновляем ТОЛЬКО эпики с известной метой — если Jira не вернула мету
+// (например, проект переименован), назначения по таким эпикам НЕ трогаем.
 async function syncAssignments(
   sprintId: number,
   keys: string[],
@@ -127,17 +129,28 @@ async function syncAssignments(
   }
   const memberByAccount = new Map(memberRows.map((m) => [m.jira_account_id, m.id]));
 
+  // Только ключи, для которых Jira вернула мету.
+  // Ключи без меты пропускаем полностью — их назначения не трогаем.
+  const syncableKeys = keys.filter((k) => metaMap.has(k));
+  if (syncableKeys.length === 0) {
+    errors.push("skip assignments sync: no syncable keys");
+    return;
+  }
+  const skippedKeys = keys.filter((k) => !metaMap.has(k));
+  if (skippedKeys.length > 0) {
+    errors.push(`assignments not touched for ${skippedKeys.length} key(s) without meta: ${skippedKeys.join(", ")}`);
+  }
+
   // Сохраняем существующие заметки по паре (member, epic).
   const existing = await sql`
     SELECT member_id, jira_key, note FROM assignments WHERE sprint_id = ${sprintId}
   ` as Array<{ member_id: string; jira_key: string; note: string | null }>;
   const noteByPair = new Map(existing.map((a) => [`${a.member_id}::${a.jira_key}`, a.note]));
 
-  // Желаемый набор назначений из поля QA.
+  // Желаемый набор назначений из поля QA (только для syncableKeys).
   const desired: Array<{ memberId: string; jiraKey: string; note: string | null }> = [];
-  for (const key of keys) {
-    const meta = metaMap.get(key);
-    if (!meta) continue;
+  for (const key of syncableKeys) {
+    const meta = metaMap.get(key)!;
     for (const acc of meta.qaAccountIds) {
       const memberId = memberByAccount.get(acc);
       if (!memberId) {
@@ -148,10 +161,11 @@ async function syncAssignments(
     }
   }
 
-  // Полная замена в одной транзакции.
+  // Частичная замена: удаляем только назначения по syncableKeys, затем вставляем desired.
+  // Назначения по skippedKeys остаются нетронутыми.
   try {
     await sql.transaction([
-      sql`DELETE FROM assignments WHERE sprint_id = ${sprintId}`,
+      sql`DELETE FROM assignments WHERE sprint_id = ${sprintId} AND jira_key = ANY(${syncableKeys})`,
       ...desired.map((d) => sql`
         INSERT INTO assignments (sprint_id, member_id, jira_key, note)
         VALUES (${sprintId}, ${d.memberId}, ${d.jiraKey}, ${d.note})

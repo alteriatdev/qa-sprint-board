@@ -15,8 +15,10 @@ export default function AdminEpics() {
   const [data, setData] = useState<SprintData | null>(null);
   const [saving, setSaving] = useState<Record<number, boolean>>({});
   const [errors, setErrors] = useState<Record<number, string>>({});
-  // Локальные значения firstPass — чтобы инпут не прыгал при сохранении
   const [localFirstPass, setLocalFirstPass] = useState<Record<number, number>>({});
+  const [addKey, setAddKey] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/sprint/active");
@@ -65,11 +67,57 @@ export default function AdminEpics() {
     }
   }
 
+  async function addEpic(e: React.FormEvent) {
+    e.preventDefault();
+    if (!data || !addKey.trim()) return;
+    setAdding(true);
+    setAddError(null);
+    try {
+      const res = await fetch("/api/epics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sprintId: data.sprint.id, jiraKey: addKey.trim(), team: "CORE" }),
+      });
+      if (!res.ok) {
+        const b = await res.json().catch(() => ({})) as { error?: string };
+        setAddError(b.error ?? `Ошибка ${res.status}`);
+      } else {
+        setAddKey("");
+        await load();
+      }
+    } catch {
+      setAddError("Сеть недоступна");
+    } finally {
+      setAdding(false);
+    }
+  }
+
   if (!data) return <p className="text-gray-400">Загрузка...</p>;
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Эпики — Спринт {data.sprint.number}</h1>
+    <div className="space-y-6">
+      <div className="flex items-end justify-between">
+        <h1 className="text-2xl font-bold">Эпики — Спринт {data.sprint.number}</h1>
+      </div>
+
+      {/* Добавить тикет */}
+      <form onSubmit={addEpic} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/3 px-4 py-3">
+        <input
+          type="text"
+          value={addKey}
+          onChange={(e) => setAddKey(e.target.value.toUpperCase())}
+          placeholder="Ключ тикета: SD-1234 / BF-5678"
+          className="flex-1 bg-gray-800 text-white rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-gray-600"
+        />
+        <button
+          type="submit"
+          disabled={adding || !addKey.trim()}
+          className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white px-4 py-1.5 rounded-lg text-sm font-medium"
+        >
+          {adding ? "Добавляем…" : "Добавить"}
+        </button>
+        {addError && <span className="text-rose-400 text-xs">{addError}</span>}
+      </form>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -164,3 +212,4 @@ export default function AdminEpics() {
     </div>
   );
 }
+

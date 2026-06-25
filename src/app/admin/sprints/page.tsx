@@ -4,19 +4,19 @@ import { useEffect, useState } from "react";
 
 interface Sprint {
   id: number; number: number; start: string; end: string;
-  confluenceUrl: string | null;
+  confluenceUrl: string | null; isActive: boolean;
 }
 
 export default function AdminSprints() {
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [form, setForm] = useState({ number: "", start: "", end: "", confluenceUrl: "" });
   const [creating, setCreating] = useState(false);
+  const [activating, setActivating] = useState<number | null>(null);
 
   async function loadSprints() {
-    // Активный спринт через /api/sprint/active (ответ — camelCase: id, number, start, end, confluenceUrl)
-    const res = await fetch("/api/sprint/active");
-    const d = await res.json();
-    if (d.sprint) setSprints([d.sprint]);
+    const res = await fetch("/api/sprint");
+    const d = await res.json() as Sprint[];
+    setSprints(d);
   }
 
   useEffect(() => { loadSprints(); }, []);
@@ -35,6 +35,19 @@ export default function AdminSprints() {
       }),
     });
     setCreating(false);
+    setForm({ number: "", start: "", end: "", confluenceUrl: "" });
+    await loadSprints();
+  }
+
+  async function activateSprint(sprint: Sprint) {
+    const confirmed = window.confirm(
+      `Сделать Спринт ${sprint.number} активным?\n\nБорд переключится на этот спринт. Данные других спринтов останутся в базе.`
+    );
+    if (!confirmed) return;
+
+    setActivating(sprint.id);
+    await fetch(`/api/sprint/${sprint.id}/activate`, { method: "POST" });
+    setActivating(null);
     await loadSprints();
   }
 
@@ -43,19 +56,45 @@ export default function AdminSprints() {
       <h1 className="text-2xl font-bold">Спринты</h1>
 
       <div className="space-y-2">
+        {sprints.length === 0 && (
+          <p className="text-gray-500 text-sm">Спринтов пока нет.</p>
+        )}
         {sprints.map((s) => (
           <div key={s.id} className="bg-gray-900 rounded-xl px-6 py-4 flex items-center gap-4">
-            <span className="text-indigo-400 font-bold">Спринт {s.number}</span>
+            <span className="text-indigo-400 font-bold min-w-[90px]">Спринт {s.number}</span>
             <span className="text-gray-400 text-sm">{s.start} — {s.end}</span>
-            <span className="text-green-400 text-xs bg-green-400/10 px-2 py-0.5 rounded-full">
-              Активный
-            </span>
+            {s.isActive ? (
+              <span className="text-green-400 text-xs bg-green-400/10 px-2 py-0.5 rounded-full">
+                Активный
+              </span>
+            ) : (
+              <button
+                onClick={() => activateSprint(s)}
+                disabled={activating === s.id}
+                className="text-xs px-3 py-1 rounded-lg border border-white/10 text-slate-400 hover:border-indigo-500/50 hover:text-indigo-300 transition disabled:opacity-50"
+              >
+                {activating === s.id ? "Активируем..." : "Активировать"}
+              </button>
+            )}
+            {s.confluenceUrl && (
+              <a
+                href={s.confluenceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="ml-auto text-xs text-sky-400 hover:underline"
+              >
+                Confluence →
+              </a>
+            )}
           </div>
         ))}
       </div>
 
       <div className="bg-gray-900 rounded-xl p-6 space-y-4 max-w-md">
         <h2 className="font-bold">Создать новый спринт</h2>
+        <p className="text-xs text-gray-500">
+          Новый спринт создаётся неактивным — переключение на него через кнопку «Активировать».
+        </p>
         <form onSubmit={createSprint} className="space-y-3">
           <input
             type="number"
