@@ -247,7 +247,8 @@ export function EpicGraphModal({
                   )}
                   {bugs > 0 && (
                     <span className="flex items-center gap-0.5 text-[11px] text-rose-300" title="Багов">
-                      · <Bug className="h-3 w-3" /> {bugs}
+                      · <Bug className="h-3 w-3" /> {bugs}{" "}
+                      <span className="text-rose-400/70">({Math.round((bugs / total) * 100)}%)</span>
                     </span>
                   )}
                 </>
