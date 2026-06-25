@@ -1,6 +1,6 @@
 // src/app/admin/epics/page.tsx
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 
 interface EpicRow {
   id: number; jiraKey: string; team: string; title: string | null;
@@ -15,6 +15,8 @@ interface SprintData { sprint: { id: number; number: number; isActive?: boolean 
 export default function AdminEpics() {
   const [sprints, setSprints] = useState<SprintMeta[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<SprintData | null>(null);
   const [saving, setSaving] = useState<Record<number, boolean>>({});
   const [errors, setErrors] = useState<Record<number, string>>({});
@@ -29,10 +31,27 @@ export default function AdminEpics() {
     fetch("/api/sprint")
       .then((r) => r.json())
       .then((list: SprintMeta[]) => {
-        setSprints(list);
-        const active = list.find((s) => s.isActive);
-        setSelectedId(active?.id ?? list[0]?.id ?? null);
+        // Активный — первым, остальные по убыванию номера
+        const sorted = [...list].sort((a, b) => {
+          if (a.isActive) return -1;
+          if (b.isActive) return 1;
+          return b.number - a.number;
+        });
+        setSprints(sorted);
+        const active = sorted.find((s) => s.isActive);
+        setSelectedId(active?.id ?? sorted[0]?.id ?? null);
       });
+  }, []);
+
+  // Закрываем дропдаун по клику снаружи
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
   const load = useCallback(async (id: number) => {
@@ -138,19 +157,45 @@ export default function AdminEpics() {
           )}
         </h1>
         {sprints.length > 0 && (
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-gray-500">Спринт:</span>
-            <select
-              value={selectedId ?? ""}
-              onChange={(e) => setSelectedId(Number(e.target.value))}
-              className="bg-gray-800 text-white rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+          <div ref={dropdownRef} className="relative text-sm">
+            <button
+              onClick={() => setDropdownOpen((v) => !v)}
+              className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg px-3 py-1.5 transition-colors"
             >
-              {sprints.map((s) => (
-                <option key={s.id} value={s.id}>
-                  Спринт {s.number}{s.isActive ? " (активный)" : ""}
-                </option>
-              ))}
-            </select>
+              <span>
+                {(() => {
+                  const s = sprints.find((s) => s.id === selectedId);
+                  return s ? `Спринт ${s.number}${s.isActive ? " (активный)" : ""}` : "—";
+                })()}
+              </span>
+              <svg className={`w-4 h-4 text-gray-400 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {dropdownOpen && (
+              <div className="absolute right-0 top-full mt-1 z-50 min-w-[200px] bg-gray-800 border border-white/10 rounded-xl shadow-xl overflow-hidden">
+                {sprints.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => { setSelectedId(s.id); setDropdownOpen(false); }}
+                    className={[
+                      "w-full text-left px-4 py-2.5 flex items-center justify-between gap-3 transition-colors",
+                      s.id === selectedId
+                        ? "bg-indigo-600 text-white"
+                        : "text-gray-300 hover:bg-white/8 hover:text-white",
+                    ].join(" ")}
+                  >
+                    <span>Спринт {s.number}</span>
+                    {s.isActive && (
+                      <span className="text-xs bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full font-medium">
+                        активный
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
