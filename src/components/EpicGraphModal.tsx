@@ -45,7 +45,7 @@ const TONE_LEGEND: { tone: GraphTone; label: string }[] = [
   { tone: "dev", label: "В разработке" },
   { tone: "merge", label: "Merge to stage" },
   { tone: "blocked", label: "Блок (девы)" },
-  { tone: "reopen", label: "Reopen (доработка)" },
+  { tone: "reopen", label: "Reopen" },
   { tone: "blockTest", label: "Блок тестов" },
   { tone: "readyQa", label: "Готово к тестам" },
   { tone: "testing", label: "В тестировании" },
