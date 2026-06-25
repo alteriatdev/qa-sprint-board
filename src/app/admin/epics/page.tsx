@@ -14,24 +14,55 @@ interface SprintData { sprint: { id: number; number: number }; epics: EpicRow[] 
 export default function AdminEpics() {
   const [data, setData] = useState<SprintData | null>(null);
   const [saving, setSaving] = useState<Record<number, boolean>>({});
+  const [errors, setErrors] = useState<Record<number, string>>({});
+  // Локальные значения firstPass — чтобы инпут не прыгал при сохранении
+  const [localFirstPass, setLocalFirstPass] = useState<Record<number, number>>({});
 
   const load = useCallback(async () => {
     const res = await fetch("/api/sprint/active");
-    const d = await res.json();
+    const d = await res.json() as SprintData;
     setData(d);
+    // Синхронизируем локальный стейт с данными из БД
+    setLocalFirstPass(
+      Object.fromEntries(d.epics.map((e: EpicRow) => [e.id, e.firstPass]))
+    );
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
   async function updateEpic(id: number, patch: Record<string, unknown>) {
     setSaving((s) => ({ ...s, [id]: true }));
-    await fetch(`/api/epics/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...patch, updatedBy: "admin" }),
-    });
-    setSaving((s) => ({ ...s, [id]: false }));
-    await load();
+    setErrors((e) => { const next = { ...e }; delete next[id]; return next; });
+
+    try {
+      const res = await fetch(`/api/epics/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...patch, updatedBy: "admin" }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: string };
+        const msg = body.error ?? `Ошибка ${res.status}`;
+        setErrors((e) => ({ ...e, [id]: msg }));
+        // Откатываем localFirstPass обратно к значению в БД
+        if (patch.firstPass !== undefined && data) {
+          const epic = data.epics.find((e) => e.id === id);
+          if (epic) setLocalFirstPass((s) => ({ ...s, [id]: epic.firstPass }));
+        }
+        return;
+      }
+
+      await load();
+    } catch (err) {
+      setErrors((e) => ({ ...e, [id]: "Сеть недоступна" }));
+      if (patch.firstPass !== undefined && data) {
+        const epic = data.epics.find((e) => e.id === id);
+        if (epic) setLocalFirstPass((s) => ({ ...s, [id]: epic.firstPass }));
+      }
+    } finally {
+      setSaving((s) => ({ ...s, [id]: false }));
+    }
   }
 
   if (!data) return <p className="text-gray-400">Загрузка...</p>;
@@ -52,6 +83,7 @@ export default function AdminEpics() {
               <th className="py-2 pr-4 text-center">Ретесты %</th>
               <th className="py-2 pr-4 text-center">Критбизнес</th>
               <th className="py-2 pr-4 text-center">Цель ✓</th>
+              <th className="py-2 pr-4"></th>
             </tr>
           </thead>
           <tbody>
@@ -89,9 +121,15 @@ export default function AdminEpics() {
                     type="number"
                     min={0}
                     max={100}
-                    defaultValue={epic.firstPass}
-                    onBlur={(e) => {
-                      const val = Math.min(100, Math.max(0, Number(e.target.value)));
+                    value={localFirstPass[epic.id] ?? epic.firstPass}
+                    onChange={(e) =>
+                      setLocalFirstPass((s) => ({
+                        ...s,
+                        [epic.id]: Math.min(100, Math.max(0, Number(e.target.value))),
+                      }))
+                    }
+                    onBlur={() => {
+                      const val = localFirstPass[epic.id] ?? epic.firstPass;
                       if (val !== epic.firstPass) updateEpic(epic.id, { firstPass: val });
                     }}
                     className="w-16 bg-gray-800 text-white text-center rounded px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500"
@@ -108,9 +146,16 @@ export default function AdminEpics() {
                     />
                   </td>
                 ))}
-                {saving[epic.id] && (
-                  <td className="py-2 text-indigo-400 text-xs">Сохр...</td>
-                )}
+                <td className="py-2 pl-2 min-w-[80px]">
+                  {saving[epic.id] && (
+                    <span className="text-indigo-400 text-xs">Сохр...</span>
+                  )}
+                  {errors[epic.id] && (
+                    <span className="text-red-400 text-xs" title={errors[epic.id]}>
+                      ✗ {errors[epic.id]}
+                    </span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
