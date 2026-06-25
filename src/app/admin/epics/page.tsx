@@ -137,27 +137,20 @@ export default function AdminEpics() {
             </span>
           )}
         </h1>
-        {sprints.length > 1 && (
+        {sprints.length > 0 && (
           <div className="flex items-center gap-2 text-sm">
             <span className="text-gray-500">Спринт:</span>
-            <div className="flex gap-1">
+            <select
+              value={selectedId ?? ""}
+              onChange={(e) => setSelectedId(Number(e.target.value))}
+              className="bg-gray-800 text-white rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+            >
               {sprints.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setSelectedId(s.id)}
-                  className={[
-                    "px-3 py-1 rounded-lg font-medium transition-colors",
-                    selectedId === s.id
-                      ? "bg-indigo-600 text-white"
-                      : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white",
-                    s.isActive ? "ring-1 ring-emerald-500/50" : "",
-                  ].join(" ")}
-                  title={s.isActive ? "Активный спринт" : ""}
-                >
-                  {s.number}{s.isActive ? " ●" : ""}
-                </button>
+                <option key={s.id} value={s.id}>
+                  Спринт {s.number}{s.isActive ? " (активный)" : ""}
+                </option>
               ))}
-            </div>
+            </select>
           </div>
         )}
       </div>
