@@ -388,16 +388,6 @@ export function EpicGraphModal({
               </button>
             );
           })}
-          <span className="inline-flex items-center gap-1.5">
-            <span
-              className="h-2.5 w-2.5 rounded-full border-2"
-              style={{ borderColor: LINK_HEX }}
-            />
-            связанные (линк)
-            {linkedCount > 0 && (
-              <span className="font-mono text-[10px] text-slate-500">{linkedCount}</span>
-            )}
-          </span>
         </footer>
       </div>
     </div>
