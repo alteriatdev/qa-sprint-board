@@ -199,9 +199,10 @@ export function EpicGraphModal({
 
   if (!open) return null;
 
-  const total = snapshot?.nodes.length ?? 0;
+  const childCount = snapshot?.nodes.length ?? 0;
   const bugs = snapshot?.nodes.filter((n) => n.type === "bug").length ?? 0;
   const linkedCount = snapshot?.linked?.length ?? 0;
+  const total = childCount + linkedCount;
   const filterActive = activeTones.size > 0;
 
   return (
@@ -218,7 +219,7 @@ export function EpicGraphModal({
       >
         <header className="flex items-start justify-between gap-3 border-b border-white/10 p-4">
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <a
                 href={epic.links.jira}
                 target="_blank"
@@ -229,17 +230,27 @@ export function EpicGraphModal({
               </a>
               <span className="text-[11px] text-slate-400">{statusMeta[epic.jiraStatus].label}</span>
               {total > 0 && (
-                <span className="flex items-center gap-1 text-[11px] text-slate-500">
-                  · {total} задач
-                  <span className="flex items-center gap-0.5 text-rose-300">
-                    <Bug className="h-3 w-3" /> {bugs}
+                <>
+                  <span className="text-[11px] text-slate-500">·</span>
+                  <span className="text-[11px] text-slate-300" title="Всего задач">
+                    {total} всего
                   </span>
-                </span>
-              )}
-              {linkedCount > 0 && (
-                <span className="text-[11px]" style={{ color: LINK_HEX }}>
-                  · {linkedCount} связанных
-                </span>
+                  {childCount > 0 && (
+                    <span className="text-[11px] text-slate-500" title="Дочерних задач">
+                      · {childCount} дочерних
+                    </span>
+                  )}
+                  {linkedCount > 0 && (
+                    <span className="text-[11px]" style={{ color: LINK_HEX }} title="Связанных задач">
+                      · {linkedCount} связанных
+                    </span>
+                  )}
+                  {bugs > 0 && (
+                    <span className="flex items-center gap-0.5 text-[11px] text-rose-300" title="Багов">
+                      · <Bug className="h-3 w-3" /> {bugs}
+                    </span>
+                  )}
+                </>
               )}
             </div>
             <h2 className="mt-0.5 truncate text-sm font-semibold text-slate-100">{epic.title}</h2>
@@ -254,7 +265,7 @@ export function EpicGraphModal({
         </header>
 
         <div ref={wrapRef} className="relative min-h-0 flex-1">
-          {total + linkedCount > 0 ? (
+          {total > 0 ? (
             <ForceGraph2D
               ref={fgRef}
               width={size.w}
