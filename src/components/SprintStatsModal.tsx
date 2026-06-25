@@ -47,9 +47,9 @@ function InfoTooltip({ text }: { text: string }) {
         <circle cx="12" cy="12" r="10" />
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4m0-4h.01" />
       </svg>
-      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-xs text-gray-300 leading-relaxed shadow-xl opacity-0 group-hover:opacity-100 transition-opacity z-50">
+      <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-xs text-gray-300 leading-relaxed shadow-xl opacity-0 group-hover:opacity-100 transition-opacity z-50">
+        <span className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-800" />
         {text}
-        <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800" />
       </span>
     </span>
   );
