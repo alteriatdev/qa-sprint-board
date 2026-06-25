@@ -9,9 +9,12 @@ interface EpicRow {
   goal: string | null; priority: string;
 }
 
-interface SprintData { sprint: { id: number; number: number }; epics: EpicRow[] }
+interface SprintMeta { id: number; number: number; isActive: boolean }
+interface SprintData { sprint: { id: number; number: number; isActive?: boolean }; epics: EpicRow[] }
 
 export default function AdminEpics() {
+  const [sprints, setSprints] = useState<SprintMeta[]>([]);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [data, setData] = useState<SprintData | null>(null);
   const [saving, setSaving] = useState<Record<number, boolean>>({});
   const [errors, setErrors] = useState<Record<number, string>>({});
@@ -21,17 +24,29 @@ export default function AdminEpics() {
   const [addError, setAddError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<Record<number, boolean>>({});
 
-  const load = useCallback(async () => {
-    const res = await fetch("/api/sprint/active");
+  // Загружаем список всех спринтов один раз, выбираем активный по умолчанию
+  useEffect(() => {
+    fetch("/api/sprint")
+      .then((r) => r.json())
+      .then((list: SprintMeta[]) => {
+        setSprints(list);
+        const active = list.find((s) => s.isActive);
+        setSelectedId(active?.id ?? list[0]?.id ?? null);
+      });
+  }, []);
+
+  const load = useCallback(async (id: number) => {
+    const res = await fetch(`/api/sprint/${id}`);
     const d = await res.json() as SprintData;
     setData(d);
-    // Синхронизируем локальный стейт с данными из БД
     setLocalFirstPass(
       Object.fromEntries(d.epics.map((e: EpicRow) => [e.id, e.firstPass]))
     );
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    if (selectedId !== null) load(selectedId);
+  }, [selectedId, load]);
 
   async function updateEpic(id: number, patch: Record<string, unknown>) {
     setSaving((s) => ({ ...s, [id]: true }));
@@ -56,7 +71,7 @@ export default function AdminEpics() {
         return;
       }
 
-      await load();
+      if (selectedId !== null) await load(selectedId);
     } catch (err) {
       setErrors((e) => ({ ...e, [id]: "Сеть недоступна" }));
       if (patch.firstPass !== undefined && data) {
@@ -71,7 +86,6 @@ export default function AdminEpics() {
   async function addEpic(e: React.FormEvent) {
     e.preventDefault();
     if (!data || !addKey.trim()) return;
-    // Парсим полную Jira-ссылку → вытаскиваем только ключ тикета
     const rawInput = addKey.trim();
     const urlMatch = rawInput.match(/\/browse\/([A-Z]+-\d+)/i);
     const resolvedKey = urlMatch ? urlMatch[1].toUpperCase() : rawInput.toUpperCase();
@@ -88,7 +102,7 @@ export default function AdminEpics() {
         setAddError(b.error ?? `Ошибка ${res.status}`);
       } else {
         setAddKey("");
-        await load();
+        if (selectedId !== null) await load(selectedId);
       }
     } catch {
       setAddError("Сеть недоступна");
@@ -102,7 +116,7 @@ export default function AdminEpics() {
     setDeleting((s) => ({ ...s, [id]: true }));
     try {
       await fetch(`/api/epics/${id}`, { method: "DELETE" });
-      await load();
+      if (selectedId !== null) await load(selectedId);
     } finally {
       setDeleting((s) => ({ ...s, [id]: false }));
     }
@@ -110,10 +124,42 @@ export default function AdminEpics() {
 
   if (!data) return <p className="text-gray-400">Загрузка...</p>;
 
+  const activeSprint = sprints.find((s) => s.isActive);
+
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between">
-        <h1 className="text-2xl font-bold">Задачи — Спринт {data.sprint.number}</h1>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <h1 className="text-2xl font-bold">
+          Задачи — Спринт {data.sprint.number}
+          {data.sprint.isActive === false && (
+            <span className="ml-3 text-sm font-normal text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full">
+              не активен
+            </span>
+          )}
+        </h1>
+        {sprints.length > 1 && (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-500">Спринт:</span>
+            <div className="flex gap-1">
+              {sprints.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setSelectedId(s.id)}
+                  className={[
+                    "px-3 py-1 rounded-lg font-medium transition-colors",
+                    selectedId === s.id
+                      ? "bg-indigo-600 text-white"
+                      : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white",
+                    s.isActive ? "ring-1 ring-emerald-500/50" : "",
+                  ].join(" ")}
+                  title={s.isActive ? "Активный спринт" : ""}
+                >
+                  {s.number}{s.isActive ? " ●" : ""}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Добавить тикет */}
