@@ -138,13 +138,36 @@ function graphType(issuetype: string | undefined): "bug" | "task" {
   return t.includes("баг") || t.includes("bug") ? "bug" : "task";
 }
 
+// Поле «Team» в Jira (атлассиановское Team-поле). Значение — объект
+// { name/title }, изредка массив (мультиселект). Возвращаем имя(имена) строкой.
+const TEAM_FIELD = "customfield_10001";
+
+function extractTeam(fields: Record<string, unknown> | undefined): string | null {
+  const v = fields?.[TEAM_FIELD];
+  if (!v) return null;
+  const nameOf = (x: unknown): string | null => {
+    if (typeof x === "string") return x;
+    if (x && typeof x === "object") {
+      const o = x as { name?: unknown; title?: unknown; value?: unknown };
+      const n = o.name ?? o.title ?? o.value;
+      return typeof n === "string" ? n : null;
+    }
+    return null;
+  };
+  if (Array.isArray(v)) {
+    const names = v.map(nameOf).filter((n): n is string => !!n);
+    return names.length ? names.join(", ") : null;
+  }
+  return nameOf(v);
+}
+
 interface RawIssue {
   key: string;
   fields: {
     summary: string;
     status: { name: string; statusCategory?: { key: string } };
     issuetype?: { name: string };
-  };
+  } & Record<string, unknown>;
 }
 
 export interface EpicGraphSnapshot { nodes: GraphNode[]; linked: LinkedNode[] }
@@ -154,7 +177,7 @@ export interface EpicGraphSnapshot { nodes: GraphNode[]; linked: LinkedNode[] }
 // и тип связи (relation) за один запрос, и список совпадает с панелью связей Jira.
 export async function fetchEpicGraph(epicKey: string): Promise<EpicGraphSnapshot> {
   const [childIssues, epicRows] = (await Promise.all([
-    searchIssues(`parent = "${epicKey}"`, ["summary", "status", "issuetype"]),
+    searchIssues(`parent = "${epicKey}"`, ["summary", "status", "issuetype", TEAM_FIELD]),
     searchIssues(`key = "${epicKey}"`, ["issuelinks"]),
   ])) as [
     RawIssue[],
@@ -175,6 +198,7 @@ export async function fetchEpicGraph(epicKey: string): Promise<EpicGraphSnapshot
     type: graphType(i.fields.issuetype?.name),
     status: i.fields.status?.name ?? "",
     cat: i.fields.status?.statusCategory?.key ?? "new",
+    team: extractTeam(i.fields),
   }));
 
   const childKeys = new Set(nodes.map((n) => n.key));
@@ -193,6 +217,24 @@ export async function fetchEpicGraph(epicKey: string): Promise<EpicGraphSnapshot
       cat: issue.fields.status?.statusCategory?.key ?? "new",
       relation: relation || link.type.name,
     });
+  }
+
+  // Поле Team у связанных задач не приходит в issuelinks — дотягиваем одним
+  // запросом по их ключам (нужно для разбивки багов фронт/бэк в шапке графа).
+  const linkedKeys = [...linkedMap.keys()];
+  if (linkedKeys.length > 0) {
+    try {
+      const teamRows = (await searchIssues(
+        `key in (${linkedKeys.join(",")})`,
+        [TEAM_FIELD],
+      )) as Array<{ key: string; fields: Record<string, unknown> }>;
+      for (const r of teamRows) {
+        const node = linkedMap.get(r.key);
+        if (node) node.team = extractTeam(r.fields);
+      }
+    } catch {
+      // не критично: без team связанные баги просто не попадут в разбивку
+    }
   }
 
   return { nodes, linked: [...linkedMap.values()] };

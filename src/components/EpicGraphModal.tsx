@@ -7,6 +7,9 @@ import type { Epic } from "@/data/sprint";
 import {
   epicGraph,
   toneOfStatus,
+  isFrontTeam,
+  isBackTeam,
+  isDevOpsTeam,
   TONE_HEX,
   type GraphTone,
   type EpicGraphData,
@@ -200,10 +203,21 @@ export function EpicGraphModal({
   if (!open) return null;
 
   const childCount = snapshot?.nodes.length ?? 0;
-  const bugs = snapshot?.nodes.filter((n) => n.type === "bug").length ?? 0;
   const linkedCount = snapshot?.linked?.length ?? 0;
   const total = childCount + linkedCount;
   const filterActive = activeTones.size > 0;
+
+  // Баги (дети + связанные) и их разбивка по команде (поле Team в Jira).
+  const allNodes = [...(snapshot?.nodes ?? []), ...(snapshot?.linked ?? [])];
+  const bugNodes = allNodes.filter((n) => n.type === "bug");
+  const bugs = bugNodes.length;
+  const feBugs = bugNodes.filter((n) => isFrontTeam(n.team)).length;
+  const beBugs = bugNodes.filter((n) => isBackTeam(n.team)).length;
+  const devBugs = bugNodes.filter((n) => isDevOpsTeam(n.team)).length;
+  // Разбивку показываем только если в снапшоте есть данные о команде
+  // (старые снапшоты без team не должны рисовать «Фронт 0 / Бэк 0»).
+  const hasTeamData = allNodes.some((n) => n.team);
+  const pctOf = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
 
   return (
     <div
@@ -246,9 +260,27 @@ export function EpicGraphModal({
                     </span>
                   )}
                   {bugs > 0 && (
-                    <span className="flex items-center gap-0.5 text-[11px] text-rose-300" title="Багов">
-                      · <Bug className="h-3 w-3" /> {bugs}{" "}
-                      <span className="text-rose-400/70">({Math.round((bugs / total) * 100)}%)</span>
+                    <span className="flex items-center gap-1 text-[11px] text-rose-300">
+                      <span className="flex items-center gap-0.5" title="Задачи типа «Баг» и их доля от всех задач эпика">
+                        · <Bug className="h-3 w-3" /> Баги: {bugs}{" "}
+                        <span className="text-rose-400/70">({pctOf(bugs, total)}%)</span>
+                      </span>
+                      {hasTeamData && (
+                        <span className="text-slate-400" title="Разбивка багов по полю Team (% от всех багов). Бэкенд = GO + PHP">
+                          <span className="text-slate-600">|</span>{" "}
+                          <span className="text-sky-300">
+                            Фронтенд {feBugs} <span className="text-sky-400/70">({pctOf(feBugs, bugs)}%)</span>
+                          </span>{" "}
+                          <span className="text-slate-600">/</span>{" "}
+                          <span className="text-amber-300">
+                            Бэкенд {beBugs} <span className="text-amber-400/70">({pctOf(beBugs, bugs)}%)</span>
+                          </span>{" "}
+                          <span className="text-slate-600">/</span>{" "}
+                          <span className="text-emerald-300">
+                            DevOps {devBugs} <span className="text-emerald-400/70">({pctOf(devBugs, bugs)}%)</span>
+                          </span>
+                        </span>
+                      )}
                     </span>
                   )}
                 </>

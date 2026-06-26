@@ -30,6 +30,7 @@ export interface GraphNode {
   type: "bug" | "task";
   status: string;
   cat: string; // statusCategory: new | indeterminate | done
+  team?: string | null; // значение поля «Team» в Jira (customfield_10001): "Front Team" / "GO Team"…
 }
 
 // Связанная задача (issue link), а не дочерняя. relation — тип связи Jira
@@ -60,6 +61,25 @@ export const TONE_HEX: Record<GraphTone, string> = {
   release: "#a855f7", // purple-500 — тесты на стейдже пройдены (фиолетовый)
   done: "#22c55e", // green-500 — готово (зелёный)
 };
+
+// Классификация команды (поле Team) для разбивки багов в шапке графа.
+//  - Фронт  — "Front Team";
+//  - Бэк    — "GO Team" + "PHP Team" (оба бэкенд);
+//  - DevOps — "DevOps".
+// Прочие команды (Design / Product) в разбивку не попадают.
+export function isFrontTeam(team: string | null | undefined): boolean {
+  return (team ?? "").toLowerCase().includes("front");
+}
+
+export function isBackTeam(team: string | null | undefined): boolean {
+  const t = (team ?? "").toLowerCase();
+  return t.includes("go") || t.includes("php");
+}
+
+export function isDevOpsTeam(team: string | null | undefined): boolean {
+  const t = (team ?? "").toLowerCase();
+  return t.includes("devops") || t.includes("dev ops");
+}
 
 // Статус Jira → тон узла. Порядок проверок важен: специфичные статусы раньше
 // общих, чтобы R.F. QA не утёк в «testing», а «Готово к релизу» — в «done».
