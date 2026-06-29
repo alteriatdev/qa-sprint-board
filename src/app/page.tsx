@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Palmtree } from "lucide-react";
 import { type Team } from "@/data/sprint";
 import { fmtRange, sprintCompletion, sprintProgress } from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
@@ -216,7 +215,7 @@ function HomeInner() {
                   : "text-slate-400 hover:bg-white/5"
               }`}
             >
-              <Avatar id={m.id} name={m.name} size="sm" dimmed={m.onVacation} />
+              <Avatar id={m.id} name={m.name} size="sm" />
               {m.name.split(" ")[0]}
               <CountBadge n={workCountOf(m.id)} />
             </button>
@@ -232,14 +231,7 @@ function HomeInner() {
           count={myEpics.length}
           accent="sky"
         >
-          {viewer.onVacation && (
-            <Empty>
-              <span className="inline-flex items-center gap-1.5">
-                <Palmtree className="h-4 w-4 text-amber-400" />В отпуске
-              </span>
-            </Empty>
-          )}
-          {!viewer.onVacation && myEpics.length === 0 && (
+          {myEpics.length === 0 && (
             <Empty>Пока ничего не назначено</Empty>
           )}
           {myEpics.length > 0 && (
@@ -286,7 +278,7 @@ function HomeInner() {
             {teamWork.map(({ member, asg }) => (
               <div key={member.id} className="space-y-2">
                 <div className="flex items-center gap-2 px-0.5">
-                  <Avatar id={member.id} name={member.name} size="sm" dimmed={member.onVacation} />
+                  <Avatar id={member.id} name={member.name} size="sm" />
                   <span className="text-xs font-semibold text-slate-300">{member.name}</span>
                   {member.shift && <span className="text-[10px] text-slate-500">{member.shift}</span>}
                 </div>

@@ -12,17 +12,16 @@ export async function PUT(request: Request, { params }: Params) {
 
   const { id } = await params;
   const body = await parseBody<{
-    name?: string; role?: string; onVacation?: boolean; shift?: string;
+    name?: string; role?: string; shift?: string;
   }>(request);
   if (!body) return badRequest("Невалидный JSON в теле запроса");
 
   try {
     const updated = (await sql`
       UPDATE members SET
-        name        = COALESCE(${body.name ?? null}, name),
-        role        = COALESCE(${body.role ?? null}, role),
-        on_vacation = COALESCE(${body.onVacation ?? null}, on_vacation),
-        shift       = COALESCE(${body.shift ?? null}, shift)
+        name  = COALESCE(${body.name ?? null}, name),
+        role  = COALESCE(${body.role ?? null}, role),
+        shift = COALESCE(${body.shift ?? null}, shift)
       WHERE id = ${id}
       RETURNING id
     `) as Array<{ id: string }>;

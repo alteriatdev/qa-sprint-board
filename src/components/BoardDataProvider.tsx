@@ -50,7 +50,6 @@ function apiMemberToMember(m: Record<string, unknown>): Member {
     slackId: (m.slackId as string) ?? "",
     team: m.team as Member["team"],
     role: m.role as string | undefined,
-    onVacation: (m.onVacation as boolean) ?? false,
     shift: m.shift as string | undefined,
   };
 }

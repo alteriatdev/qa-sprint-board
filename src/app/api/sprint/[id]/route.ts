@@ -43,11 +43,11 @@ export async function GET(_request: Request, { params }: Params) {
   }>;
 
   const memberRows = (await sql`
-    SELECT id, name, slack_id, team, role, on_vacation, shift
+    SELECT id, name, slack_id, team, role, shift
     FROM members ORDER BY team, name
   `) as Array<{
     id: string; name: string; slack_id: string | null; team: string;
-    role: string | null; on_vacation: boolean; shift: string | null;
+    role: string | null; shift: string | null;
   }>;
 
   const assignmentRows = (await sql`
@@ -90,7 +90,7 @@ export async function GET(_request: Request, { params }: Params) {
     })),
     members: memberRows.map((m) => ({
       id: m.id, name: m.name, slackId: m.slack_id,
-      team: m.team, role: m.role, onVacation: m.on_vacation, shift: m.shift,
+      team: m.team, role: m.role, shift: m.shift,
     })),
     assignments: assignmentRows.map((a) => ({
       id: a.id, sprintId: a.sprint_id, memberId: a.member_id,
