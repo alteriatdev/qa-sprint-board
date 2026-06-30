@@ -12,16 +12,15 @@ async function seed() {
   // 1. Члены команды
   for (const m of members) {
     await sql`
-      INSERT INTO members (id, name, slack_id, team, role, on_vacation, shift, jira_account_id)
+      INSERT INTO members (id, name, slack_id, team, role, shift, jira_account_id)
       VALUES (${m.id}, ${m.name}, ${m.slackId ?? null}, ${m.team},
-              ${m.role ?? null}, ${m.onVacation ?? false}, ${m.shift ?? null},
+              ${m.role ?? null}, ${m.shift ?? null},
               ${m.jiraAccountId ?? null})
       ON CONFLICT (id) DO UPDATE
         SET name = EXCLUDED.name,
             slack_id = EXCLUDED.slack_id,
             team = EXCLUDED.team,
             role = EXCLUDED.role,
-            on_vacation = EXCLUDED.on_vacation,
             shift = EXCLUDED.shift,
             jira_account_id = EXCLUDED.jira_account_id
     `;
