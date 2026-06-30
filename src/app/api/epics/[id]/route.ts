@@ -17,6 +17,7 @@ export async function PUT(request: Request, { params }: Params) {
     task?: boolean; goalDone?: boolean; firstPass?: number; updatedBy?: string;
     firstPassEnabled?: boolean; retestEnabled?: boolean; smokesEnabled?: boolean;
     firstPassDone?: boolean; retestDone?: boolean; smokesDone?: boolean;
+    parallel?: boolean;
   }>(request);
   if (!body) return badRequest("Невалидный JSON в теле запроса");
 
