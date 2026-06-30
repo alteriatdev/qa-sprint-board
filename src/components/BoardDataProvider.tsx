@@ -45,6 +45,7 @@ function apiEpicToEpic(e: Record<string, unknown>): Epic {
     firstPassDone: (e.firstPassDone as boolean) ?? false,
     retestDone: (e.retestDone as boolean) ?? false,
     smokesDone: (e.smokesDone as boolean) ?? false,
+    parallel: (e.parallel as boolean) ?? false,
     links: { jira: `https://sprutgaming.atlassian.net/browse/${e.jiraKey}` },
   };
 }

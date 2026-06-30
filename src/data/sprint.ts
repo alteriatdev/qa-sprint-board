@@ -50,6 +50,7 @@ export interface Epic {
   smokesDone?: boolean;
   /** @deprecated используй firstPassDone/retestDone/smokesDone */
   goalDone?: boolean;
+  parallel?: boolean; // разработка идёт параллельно с тестированием
   jiraStatus: JiraStatus; // мок live-статуса
   // Готовность из последнего отчёта QA. Две независимые шкалы:
   //  - firstPass: % первой проходки чек-листа (100 = проходка завершена);

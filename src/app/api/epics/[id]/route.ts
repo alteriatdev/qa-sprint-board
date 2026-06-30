@@ -40,7 +40,8 @@ export async function PUT(request: Request, { params }: Params) {
         smokes_enabled     = COALESCE(${body.smokesEnabled ?? null}, smokes_enabled),
         first_pass_done    = COALESCE(${body.firstPassDone ?? null}, first_pass_done),
         retest_done        = COALESCE(${body.retestDone ?? null}, retest_done),
-        smokes_done        = COALESCE(${body.smokesDone ?? null}, smokes_done)
+        smokes_done        = COALESCE(${body.smokesDone ?? null}, smokes_done),
+        parallel           = COALESCE(${body.parallel ?? null}, parallel)
       WHERE id = ${id}
       RETURNING sprint_id, jira_key
     `) as Array<{ sprint_id: number; jira_key: string }>;

@@ -28,7 +28,7 @@ export async function GET(_request: Request, { params }: Params) {
       se.id, se.sprint_id, se.jira_key, se.team, se.priority,
       se.goal, se.critbusiness, se.task, se.goal_done, se.sort_order,
       se.first_pass_enabled, se.retest_enabled, se.smokes_enabled,
-      se.first_pass_done, se.retest_done, se.smokes_done,
+      se.first_pass_done, se.retest_done, se.smokes_done, se.parallel,
       jc.title, jc.jira_status, jc.assignee_name, jc.issue_type,
       COALESCE(jc.retest_pct, 0) AS retest_pct,
       COALESCE(pe.first_pass, 0) AS first_pass
@@ -42,7 +42,7 @@ export async function GET(_request: Request, { params }: Params) {
     goal: string | null; critbusiness: boolean; task: boolean;
     goal_done: boolean; sort_order: number;
     first_pass_enabled: boolean; retest_enabled: boolean; smokes_enabled: boolean;
-    first_pass_done: boolean; retest_done: boolean; smokes_done: boolean;
+    first_pass_done: boolean; retest_done: boolean; smokes_done: boolean; parallel: boolean;
     title: string | null; jira_status: string | null; assignee_name: string | null;
     issue_type: string | null; retest_pct: number; first_pass: number;
   }>;
@@ -92,6 +92,7 @@ export async function GET(_request: Request, { params }: Params) {
       firstPassDone: e.first_pass_done,
       retestDone: e.retest_done,
       smokesDone: e.smokes_done,
+      parallel: e.parallel,
       sortOrder: e.sort_order,
       title: e.title,
       jiraStatus: e.jira_status,

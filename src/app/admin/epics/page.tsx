@@ -6,7 +6,7 @@ import { Trash2, X, CheckCircle2, Circle } from "lucide-react";
 interface EpicRow {
   id: number; jiraKey: string; team: string; title: string | null;
   jiraStatus: string | null; firstPass: number; retestPct: number;
-  critbusiness: boolean; task: boolean; goalDone: boolean;
+  critbusiness: boolean; task: boolean; goalDone: boolean; parallel: boolean;
   goal: string | null; priority: string;
   firstPassEnabled: boolean; retestEnabled: boolean; smokesEnabled: boolean;
   firstPassDone: boolean; retestDone: boolean; smokesDone: boolean;
@@ -392,6 +392,15 @@ export default function AdminEpics() {
                 className="accent-rose-500 w-4 h-4"
               />
               <span className="text-sm text-gray-300 group-hover:text-white transition">Критбизнес</span>
+            </label>
+            <label className="flex items-center gap-2.5 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={(draft.parallel as boolean) ?? false}
+                onChange={(e) => setDraft((d) => ({ ...d, parallel: e.target.checked }))}
+                className="accent-violet-500 w-4 h-4"
+              />
+              <span className="text-sm text-gray-300 group-hover:text-white transition">Параллельная разработка</span>
             </label>
           </div>
 

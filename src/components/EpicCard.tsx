@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Target, CheckCircle2, Circle } from "lucide-react";
+import { Target, CheckCircle2, Circle, GitBranch } from "lucide-react";
 import type { Epic, Member } from "@/data/sprint";
 import { progressColor, epicCompletion } from "@/lib/format";
 import { Avatar } from "./Avatar";
@@ -131,6 +131,13 @@ export function EpicCard({
           >
             {epic.key}
           </a>
+          {epic.parallel && (
+            <span title="Разработка идёт параллельно с тестированием"
+              className="inline-flex items-center gap-1 rounded bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-violet-300 ring-1 ring-inset ring-violet-500/30">
+              <GitBranch className="h-2.5 w-2.5" />
+              Параллель
+            </span>
+          )}
           {epic.critbusiness && (
             <span className="rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-300 ring-1 ring-inset ring-red-500/40">
               Критбизнес
