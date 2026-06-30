@@ -298,7 +298,20 @@ export function EpicGraphModal({
         </header>
 
         <div ref={wrapRef} className="relative min-h-0 flex-1">
-          {total > 0 ? (
+          {epic.task && total === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
+              <span className="text-5xl">🎯</span>
+              <p className="text-sm text-slate-400">Одиночный тикет — связанных задач нет.</p>
+              <a
+                href={epic.links.jira}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-lg bg-sky-600/20 px-4 py-2 text-sm font-medium text-sky-300 ring-1 ring-sky-500/40 transition hover:bg-sky-600/30"
+              >
+                Открыть {epic.key} в Jira →
+              </a>
+            </div>
+          ) : total > 0 ? (
             <ForceGraph2D
               ref={fgRef}
               width={size.w}

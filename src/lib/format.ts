@@ -24,17 +24,21 @@ export const priorityMeta: Record<Priority, { label: string; chip: string } | nu
 
 const clampPct = (n: number) => Math.min(Math.max(n, 0), 100);
 
-// Готовность одного эпика по жизненному циклу:
-//  - первая проходка чек-листа = первая половина (0–50%);
-//  - ретесты после проходки = вторая половина (50–100%).
+// Готовность одного эпика: done_goals / enabled_goals * 100.
+// Если ни одна цель не включена — считаем 0 (не настроено).
 export function epicCompletion(epic: Epic): number {
-  const fp = clampPct(epic.progress?.firstPass ?? 0);
-  const rt = epic.progress?.retest;
-  if (rt !== undefined) return 50 + clampPct(rt) / 2;
-  return fp / 2;
+  const goals: Array<{ enabled: boolean; done: boolean }> = [
+    { enabled: epic.firstPassEnabled ?? true, done: epic.firstPassDone ?? false },
+    { enabled: epic.retestEnabled ?? true,    done: epic.retestDone    ?? false },
+    { enabled: epic.smokesEnabled ?? true,    done: epic.smokesDone    ?? false },
+  ];
+  const enabled = goals.filter((g) => g.enabled);
+  if (enabled.length === 0) return 0;
+  const done = enabled.filter((g) => g.done).length;
+  return Math.round((done / enabled.length) * 100);
 }
 
-// Средняя готовность спринта по списку эпиков (0–100).
+// Средняя готовность спринта по всем эпикам/задачам (0–100).
 export function sprintCompletion(list: Epic[]): number {
   if (list.length === 0) return 0;
   const sum = list.reduce((acc, e) => acc + epicCompletion(e), 0);

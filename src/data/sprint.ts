@@ -39,8 +39,17 @@ export interface Epic {
   priority: Priority;
   team: Team; // чья это в первую очередь зона (CORE/eQA)
   critbusiness?: boolean;
-  goalDone?: boolean; // цель спринта по эпику выполнена (карточка станет зелёной)
   task?: boolean; // одиночная задача, а не эпик — без шкалы проходки/ретестов
+  // Три стандартные цели. *Enabled — применима ли цель к этому эпику.
+  // *Done — выполнена ли. Прогресс = done_enabled / total_enabled.
+  firstPassEnabled?: boolean;
+  retestEnabled?: boolean;
+  smokesEnabled?: boolean;
+  firstPassDone?: boolean;
+  retestDone?: boolean;
+  smokesDone?: boolean;
+  /** @deprecated используй firstPassDone/retestDone/smokesDone */
+  goalDone?: boolean;
   jiraStatus: JiraStatus; // мок live-статуса
   // Готовность из последнего отчёта QA. Две независимые шкалы:
   //  - firstPass: % первой проходки чек-листа (100 = проходка завершена);

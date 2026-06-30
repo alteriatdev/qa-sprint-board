@@ -25,6 +25,8 @@ export async function GET(_request?: Request) {
     SELECT
       se.id, se.sprint_id, se.jira_key, se.team, se.priority,
       se.goal, se.critbusiness, se.task, se.goal_done, se.sort_order,
+      se.first_pass_enabled, se.retest_enabled, se.smokes_enabled,
+      se.first_pass_done, se.retest_done, se.smokes_done,
       jc.title, jc.jira_status, jc.assignee_name, jc.issue_type,
       COALESCE(jc.retest_pct, 0) AS retest_pct,
       COALESCE(pe.first_pass, 0) AS first_pass
@@ -37,6 +39,8 @@ export async function GET(_request?: Request) {
     id: number; sprint_id: number; jira_key: string; team: string; priority: string;
     goal: string | null; critbusiness: boolean; task: boolean;
     goal_done: boolean; sort_order: number;
+    first_pass_enabled: boolean; retest_enabled: boolean; smokes_enabled: boolean;
+    first_pass_done: boolean; retest_done: boolean; smokes_done: boolean;
     title: string | null; jira_status: string | null; assignee_name: string | null;
     issue_type: string | null;
     retest_pct: number; first_pass: number;
@@ -82,10 +86,14 @@ export async function GET(_request?: Request) {
       priority: e.priority,
       goal: e.goal,
       critbusiness: e.critbusiness,
-      // Тип ведёт Jira: эпик → шкалы, любой другой тип → задача без шкал.
-      // Ручной флаг se.task — запасной, пока issue_type не синкнут.
       task: e.issue_type != null ? !isEpicType(e.issue_type) : e.task,
       goalDone: e.goal_done,
+      firstPassEnabled: e.first_pass_enabled,
+      retestEnabled: e.retest_enabled,
+      smokesEnabled: e.smokes_enabled,
+      firstPassDone: e.first_pass_done,
+      retestDone: e.retest_done,
+      smokesDone: e.smokes_done,
       sortOrder: e.sort_order,
       title: e.title,
       jiraStatus: e.jira_status,

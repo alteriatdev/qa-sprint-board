@@ -6,7 +6,7 @@ import { parseBody, badRequest, notFound, serverError } from "@/lib/http";
 
 interface Params { params: Promise<{ id: string }> }
 
-// PUT /api/epics/:id — обновить флаги, goal, firstPass
+// PUT /api/epics/:id — обновить флаги, goal, firstPass (только из adminки)
 export async function PUT(request: Request, { params }: Params) {
   const authError = await requireAdmin(request);
   if (authError) return authError;
@@ -15,6 +15,8 @@ export async function PUT(request: Request, { params }: Params) {
   const body = await parseBody<{
     goal?: string; priority?: string; critbusiness?: boolean;
     task?: boolean; goalDone?: boolean; firstPass?: number; updatedBy?: string;
+    firstPassEnabled?: boolean; retestEnabled?: boolean; smokesEnabled?: boolean;
+    firstPassDone?: boolean; retestDone?: boolean; smokesDone?: boolean;
   }>(request);
   if (!body) return badRequest("Невалидный JSON в теле запроса");
 
@@ -26,21 +28,25 @@ export async function PUT(request: Request, { params }: Params) {
   }
 
   try {
-    // Обновляем sprint_epics; RETURNING позволяет отдать 404 и переиспользовать ключи
     const updated = (await sql`
       UPDATE sprint_epics SET
-        goal         = COALESCE(${body.goal ?? null}, goal),
-        priority     = COALESCE(${body.priority ?? null}, priority),
-        critbusiness = COALESCE(${body.critbusiness ?? null}, critbusiness),
-        task         = COALESCE(${body.task ?? null}, task),
-        goal_done    = COALESCE(${body.goalDone ?? null}, goal_done)
+        goal               = COALESCE(${body.goal ?? null}, goal),
+        priority           = COALESCE(${body.priority ?? null}, priority),
+        critbusiness       = COALESCE(${body.critbusiness ?? null}, critbusiness),
+        task               = COALESCE(${body.task ?? null}, task),
+        goal_done          = COALESCE(${body.goalDone ?? null}, goal_done),
+        first_pass_enabled = COALESCE(${body.firstPassEnabled ?? null}, first_pass_enabled),
+        retest_enabled     = COALESCE(${body.retestEnabled ?? null}, retest_enabled),
+        smokes_enabled     = COALESCE(${body.smokesEnabled ?? null}, smokes_enabled),
+        first_pass_done    = COALESCE(${body.firstPassDone ?? null}, first_pass_done),
+        retest_done        = COALESCE(${body.retestDone ?? null}, retest_done),
+        smokes_done        = COALESCE(${body.smokesDone ?? null}, smokes_done)
       WHERE id = ${id}
       RETURNING sprint_id, jira_key
     `) as Array<{ sprint_id: number; jira_key: string }>;
 
     if (updated.length === 0) return notFound("Эпик не найден");
 
-    // Если передан firstPass — upsert в progress_entries
     if (body.firstPass !== undefined) {
       const { sprint_id, jira_key } = updated[0];
       await sql`
@@ -58,6 +64,7 @@ export async function PUT(request: Request, { params }: Params) {
     return serverError("Не удалось обновить эпик");
   }
 }
+
 
 // DELETE /api/epics/:id
 export async function DELETE(request: Request, { params }: Params) {
