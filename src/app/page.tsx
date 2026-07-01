@@ -78,15 +78,15 @@ function HomeInner() {
     .map((m) => ({ member: m, asg: asgByMember.get(m.id) }))
     .filter((x) => x.asg && x.asg.epicKeys.length > 0);
 
-  // Зона «Можно взять» — эпики команды без назначений
+  // Зона «Можно взять» — эпики команды без назначений (критбизнес идут первыми)
   const assignedKeys = new Set(
     assignments
       .filter((a) => memberById.get(a.memberId)?.team === team)
       .flatMap((a) => a.epicKeys),
   );
-  const freeEpics = teamEpics.filter((e) => !assignedKeys.has(e.key));
-  const critFree = freeEpics.filter((e) => e.critbusiness);
-  const normalFree = freeEpics.filter((e) => !e.critbusiness);
+  const freeEpics = teamEpics
+    .filter((e) => !assignedKeys.has(e.key))
+    .sort((a, b) => (b.critbusiness ? 1 : 0) - (a.critbusiness ? 1 : 0));
 
   // Сколько карточек у конкретного тестера (только реально существующие эпики).
   const workCountOf = (memberId: string) =>
@@ -190,7 +190,7 @@ function HomeInner() {
             Вся команда
             <CountBadge n={assignedKeys.size} />
           </button>
-          {normalFree.length > 0 && (
+          {freeEpics.length > 0 && (
             <button
               onClick={() => setViewerId(FREE_VIEW)}
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition ${
@@ -201,7 +201,7 @@ function HomeInner() {
             >
               Можно взять
               <span className="rounded-full bg-emerald-500/25 px-1.5 text-[10px] font-bold tabular-nums text-emerald-100">
-                {normalFree.length}
+                {freeEpics.length}
               </span>
             </button>
           )}
@@ -247,32 +247,18 @@ function HomeInner() {
         <Zone
           title="Можно взять"
           subtitle="свободно / пиши лиду"
-          count={normalFree.length}
+          count={freeEpics.length}
           accent="emerald"
           bodyClassName="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
         >
-          {normalFree.length === 0 && <Empty>Свободных задач нет</Empty>}
-          {normalFree.map((e) => (
+          {freeEpics.length === 0 && <Empty>Свободных задач нет</Empty>}
+          {freeEpics.map((e) => (
             <EpicCard key={e.key} epic={e} />
           ))}
         </Zone>
       ) : (
-        /* ===== Общая борда: критбизнес закреплён сверху + работа команды ===== */
+        /* ===== Общая борда: работа команды ===== */
         <div className="space-y-4">
-          {critFree.length > 0 && (
-            <Zone
-              title="Критбизнес — брать первым"
-              subtitle="закрыть в первую очередь"
-              count={critFree.length}
-              accent="rose"
-              bodyClassName="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
-            >
-              {critFree.map((e) => (
-                <EpicCard key={e.key} epic={e} owners={ownersOf(e.key)} />
-              ))}
-            </Zone>
-          )}
-
           <Zone title="В работе у команды" subtitle="кто что тестит" count={teamWork.length} accent="amber">
             {teamWork.length === 0 && <Empty>Нет активных назначений</Empty>}
             {teamWork.map(({ member, asg }) => (
