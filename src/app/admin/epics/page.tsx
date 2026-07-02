@@ -17,8 +17,8 @@ interface SprintData { sprint: { id: number; number: number; isActive?: boolean 
 
 const GOALS = [
   { key: "firstPass" as const, enabledKey: "firstPassEnabled" as const, doneKey: "firstPassDone" as const, label: "Чеклист" },
-  { key: "retest"    as const, enabledKey: "retestEnabled"    as const, doneKey: "retestDone"    as const, label: "Ретесты на stage" },
-  { key: "smokes"    as const, enabledKey: "smokesEnabled"    as const, doneKey: "smokesDone"    as const, label: "Смоки на DemoView" },
+  { key: "retest"    as const, enabledKey: "retestEnabled"    as const, doneKey: "retestDone"    as const, label: "Ретесты" },
+  { key: "smokes"    as const, enabledKey: "smokesEnabled"    as const, doneKey: "smokesDone"    as const, label: "Смок-тесты" },
 ] as const;
 
 export default function AdminEpics() {

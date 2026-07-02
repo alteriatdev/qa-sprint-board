@@ -52,14 +52,14 @@ const GOALS = [
     key: "retest" as const,
     enabledKey: "retestEnabled" as const,
     doneKey: "retestDone" as const,
-    label: "Ретесты на stage",
+    label: "Ретесты",
     progressKey: "retest" as const,
   },
   {
     key: "smokes" as const,
     enabledKey: "smokesEnabled" as const,
     doneKey: "smokesDone" as const,
-    label: "Смоки на DemoView",
+    label: "Смок-тесты",
     progressKey: null,
   },
 ] as const;
