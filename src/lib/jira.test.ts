@@ -13,12 +13,18 @@ describe("extractQaAccountIds", () => {
     expect(extractQaAccountIds(fields).sort()).toEqual(["acc-lc-1", "acc-lc-2"]);
   });
 
+  it("берёт accountId из поля QA проекта DVPS (customfield_12060)", () => {
+    expect(extractQaAccountIds({ customfield_12060: [{ accountId: "acc-dvps" }] }))
+      .toEqual(["acc-dvps"]);
+  });
+
   it("объединяет поля QA всех проектов и дедупит", () => {
     const fields = {
       customfield_10721: [{ accountId: "a" }],
       customfield_12027: [{ accountId: "a" }, { accountId: "b" }],
+      customfield_12060: [{ accountId: "c" }],
     };
-    expect(extractQaAccountIds(fields).sort()).toEqual(["a", "b"]);
+    expect(extractQaAccountIds(fields).sort()).toEqual(["a", "b", "c"]);
   });
 
   it("пустой результат, если поля QA не заполнены", () => {
@@ -35,6 +41,12 @@ describe("mapStatus", () => {
     expect(mapStatus("Аналитика")).toBe("analysis");
     expect(mapStatus("Беклог")).toBe("backlog");
     expect(mapStatus("Готово к релизу")).toBe("rf_release");
+  });
+
+  it("русские статусы DVPS (DevOps) маппятся корректно", () => {
+    expect(mapStatus("Драфт")).toBe("backlog");
+    expect(mapStatus("Блок")).toBe("block_tests");
+    expect(mapStatus("В работе")).toBe("in_development");
   });
 
   it("реопен ловится в любом регистре и на латинице", () => {

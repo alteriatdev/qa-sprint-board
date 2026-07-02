@@ -16,12 +16,15 @@ const STATUS_MAP: Record<string, string> = {
   "аналитика":         "analysis",
   "backlog":           "backlog",
   "беклог":            "backlog",
+  "драфт":             "backlog",
   "new":               "backlog",
   "in development":    "in_development",
   "merge to stage":    "in_development",
+  "в работе":          "in_development",
   "блок тесты":        "block_tests",
   "block tests":       "block_tests",
   "blocked":           "block_tests",
+  "блок":              "block_tests",
   "reopen":            "reopen",
   "реопен":            "reopen",
   "r.f. qa":           "rf_qa",
@@ -55,13 +58,13 @@ export interface JiraEpicMeta {
   issueType: string;
   // accountId'ы из поля «QA» (тестеры, на кого назначен эпик). Поле кастомное и
   // РАЗНОЕ по проектам: SD → customfield_10721, BF → customfield_10722,
-  // SPS → customfield_11193, LC → customfield_12027. Берём объединение всех
-  // (мульти-юзер пикер).
+  // SPS → customfield_11193, LC → customfield_12027, DVPS → customfield_12060.
+  // Берём объединение всех (мульти-юзер пикер).
   qaAccountIds: string[];
 }
 
 // Поля «QA» по проектам. Все — мульти-юзер пикеры с одинаковым смыслом.
-const QA_FIELDS = ["customfield_10721", "customfield_10722", "customfield_11193", "customfield_12027"] as const;
+const QA_FIELDS = ["customfield_10721", "customfield_10722", "customfield_11193", "customfield_12027", "customfield_12060"] as const;
 
 export function extractQaAccountIds(fields: Record<string, unknown>): string[] {
   const ids = new Set<string>();
