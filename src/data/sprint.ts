@@ -17,6 +17,7 @@ export type JiraStatus =
   | "backlog"
   | "in_development"
   | "block_tests"
+  | "reopen"
   | "rf_qa"
   | "qa_testing"
   | "rf_release"

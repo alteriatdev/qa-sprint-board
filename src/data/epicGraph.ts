@@ -86,7 +86,7 @@ export function isDevOpsTeam(team: string | null | undefined): boolean {
 export function toneOfStatus(status: string, cat: string): GraphTone {
   const s = status.toLowerCase().trim();
 
-  if (s.includes("reopen")) return "reopen"; // доработка
+  if (s.includes("reopen") || s.includes("реопен")) return "reopen"; // доработка (LC отдаёт кириллицей)
   if (s.includes("merge")) return "merge"; // Merge to stage — код готов к заливке
   if (s.includes("блок тест") || s.includes("block test")) return "blockTest"; // блок тестирования
   if (s.includes("blocked")) return "blocked"; // блок девов

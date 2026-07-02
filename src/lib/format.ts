@@ -10,6 +10,7 @@ export const statusMeta: Record<
   backlog: { label: "Backlog", dot: "bg-zinc-400", chip: "bg-zinc-500/15 text-zinc-300 ring-zinc-500/30" },
   in_development: { label: "In development", dot: "bg-amber-400", chip: "bg-amber-500/15 text-amber-300 ring-amber-500/30" },
   block_tests: { label: "Блок тесты", dot: "bg-orange-400", chip: "bg-orange-500/15 text-orange-300 ring-orange-500/30" },
+  reopen: { label: "Реопен", dot: "bg-rose-400", chip: "bg-rose-500/15 text-rose-300 ring-rose-500/30" },
   rf_qa: { label: "R.F. QA", dot: "bg-violet-400", chip: "bg-violet-500/15 text-violet-300 ring-violet-500/30" },
   qa_testing: { label: "QA testing", dot: "bg-sky-400", chip: "bg-sky-500/15 text-sky-300 ring-sky-500/30" },
   rf_release: { label: "R.F Release", dot: "bg-teal-400", chip: "bg-teal-500/15 text-teal-300 ring-teal-500/30" },

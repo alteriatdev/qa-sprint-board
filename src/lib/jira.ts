@@ -13,23 +13,28 @@ const HEADERS = {
 // (реальные имена в Jira приходят вперемешку: "analysis", "Merge to stage" и т.д.).
 const STATUS_MAP: Record<string, string> = {
   "analysis":          "analysis",
+  "аналитика":         "analysis",
   "backlog":           "backlog",
+  "беклог":            "backlog",
   "new":               "backlog",
   "in development":    "in_development",
   "merge to stage":    "in_development",
   "блок тесты":        "block_tests",
   "block tests":       "block_tests",
   "blocked":           "block_tests",
+  "reopen":            "reopen",
+  "реопен":            "reopen",
   "r.f. qa":           "rf_qa",
   "qa testing":        "qa_testing",
   "r.f release":       "rf_release",
+  "r.f. release":      "rf_release",
   "rf release":        "rf_release",
   "готово к релизу":   "rf_release",
   "готово":            "done",
   "done":              "done",
 };
 
-function mapStatus(name: string): string {
+export function mapStatus(name: string): string {
   return STATUS_MAP[name.trim().toLowerCase()] ?? "backlog";
 }
 
@@ -50,14 +55,15 @@ export interface JiraEpicMeta {
   issueType: string;
   // accountId'ы из поля «QA» (тестеры, на кого назначен эпик). Поле кастомное и
   // РАЗНОЕ по проектам: SD → customfield_10721, BF → customfield_10722,
-  // SPS → customfield_11193. Берём объединение всех трёх (мульти-юзер пикер).
+  // SPS → customfield_11193, LC → customfield_12027. Берём объединение всех
+  // (мульти-юзер пикер).
   qaAccountIds: string[];
 }
 
-// Поля «QA» по проектам. Все три — мульти-юзер пикеры с одинаковым смыслом.
-const QA_FIELDS = ["customfield_10721", "customfield_10722", "customfield_11193"] as const;
+// Поля «QA» по проектам. Все — мульти-юзер пикеры с одинаковым смыслом.
+const QA_FIELDS = ["customfield_10721", "customfield_10722", "customfield_11193", "customfield_12027"] as const;
 
-function extractQaAccountIds(fields: Record<string, unknown>): string[] {
+export function extractQaAccountIds(fields: Record<string, unknown>): string[] {
   const ids = new Set<string>();
   for (const f of QA_FIELDS) {
     const v = fields[f];
